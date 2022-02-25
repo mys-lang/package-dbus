@@ -1,0 +1,55 @@
+from fiber import Fiber
+from fiber import sleep
+from dbus import SessionBus
+from dbus.variant import Double
+from dbus.variant import String
+from .dbus_basic_server import BasicObject
+from .dbus_basic_server import BasicDemoInterface
+
+class BasicDemo(BasicDemoInterface):
+
+    def random(self) -> i32:
+        return randint()
+
+    def hello(self, name: string) -> string:
+        print(name)
+
+        return "Hi!"
+
+    def echo(self, input: Variant) -> Variant:
+        return input
+
+    def cat(self, file: string) -> bytes:
+        return BinaryFile(file).read()
+
+    def sum(self, ints: [i32]) -> i32:
+        return sum(ints)
+
+    def info(self) -> {string: string}:
+        return {"foo": "1", "bar": "2"}
+
+class Basicer(Fiber):
+    bus: Bus
+    basic_object: BasicObject
+
+    def run(self):
+        delay = 1.0
+
+        while True:
+            self.basic_object.signal_status(Double(delay))
+            sleep(delay)
+            delay += 1.0
+
+            if delay > 5.0:
+                self.basic_object.signal_status(String("Bye!"))
+                self.bus.close()
+                break
+
+def main():
+    bus = SessionBus()
+    basic_object = BasicObject(BasicDemo())
+    bus.add_object_server("com.example.Basic", "/Basic1", basic_object)
+    basicer = Basicer(bus, basic_object)
+    basicer.start()
+    bus.run()
+    basicer.join()

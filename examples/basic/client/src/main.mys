@@ -1,0 +1,35 @@
+from fiber import Fiber
+from dbus import SessionBus
+from dbus.variant import Double
+from dbus.variant import String
+from .dbus_basic_client import BasicObject
+from .dbus_basic_client import BasicDemoInterface
+
+class BasicDemo(BasicDemoInterface):
+    bus: Bus
+    
+    def status(self, message: Variant):
+        print(message)
+
+        match message:
+            case String("Bye!"):
+                self.bus.close()
+
+class Caller(Fiber):
+    basic_client: BasicObject
+
+    def run(self):
+        print(basic_client.hello("Hello!"))
+        print(basic_client.echo(Double(5.0)))
+        print(basic_client.cat("README.rst"))
+        print(basic_client.sum([1, 2]))
+        print(basic_client.info())
+        
+def main():
+    bus = SessionBus()
+    basic_client = BasicObject(BasicDemo(bus))
+    bus.add_object_client("com.example.Basic", "/Basic1", basic_client)
+    caller = Caller(basic_client)
+    caller.start()
+    bus.run()
+    caller.join()

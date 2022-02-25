@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<node>
+  <interface name="org.example.BasicDemo">
+    <method name="Random">
+      <arg type="i" name="value" direction="out"/>
+    </method>
+    <method name="Hello">
+      <arg type="s" name="name" direction="in"/>
+      <arg type="s" name="greeting" direction="out"/>
+    </method>
+    <method name="Echo">
+      <arg type="v" name="input" direction="in"/>
+      <arg type="v" name="output" direction="out"/>
+    </method>
+    <method name="Cat">
+      <arg type="s" name="file" direction="in"/>
+      <arg type="ay" name="contents" direction="out"/>
+    </method>
+    <method name="Sum">
+      <arg type="ai" name="ints" direction="in"/>
+      <arg type="i" names="sum" direction="out"/>
+    </method>
+    <signal name="Status">
+      <arg type="v" name="message"/>
+    </signal>
+    <method name="Info">
+      <arg type="a{ss}" name="info" direction="out"/>
+    </method>
+  </interface>
+</node>
