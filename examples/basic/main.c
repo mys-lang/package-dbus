@@ -238,18 +238,20 @@ int main()
     uint32_t fields_size;
     int res;
 
-    fd= setup("/var/run/dbus/system_bus_socket");
+    fd = setup("/run/user/1000/bus");
+    // fd = setup("/var/run/dbus/system_bus_socket");
 
     if (fd < 0) {
         return -fd;
     }
 
     if (send(fd,
-             "l\1\0\1\0\0\0\0\1\2\3\4n\0\0\0"
-             "\1\1o\0\25\0\0\0/org/freedesktop/DBus\0"
-             "\0\0\2\1s\0\24\0\0\0org.freedesktop.DBus\0"
-             "\0\0\0\6\1s\0\24\0\0\0org.freedesktop.DBus\0"
-             "\0\0\0\3\1s\0\5\0\0\0Hello\0\0\0",
+             "l\1\0\1" "\0\0\0\0" "\3\0\0\0"
+             "n\0\0\0"
+             "\1" "\1o\0" "\25\0\0\0" "/org/freedesktop/DBus\0" "\0\0"
+             "\2" "\1s\0" "\24\0\0\0" "org.freedesktop.DBus\0" "\0\0\0"
+             "\6" "\1s\0" "\24\0\0\0" "org.freedesktop.DBus\0" "\0\0\0"
+             "\3" "\1s\0" "\5\0\0\0" "Hello\0" "\0\0",
              128,
              MSG_NOSIGNAL) != 128) {
         return 15;
