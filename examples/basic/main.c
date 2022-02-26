@@ -123,7 +123,6 @@ static int read_fixed_header(int fd,
                  | (buf[9] << 8)
                  | (buf[10] << 16)
                  | (buf[11] << 24));
-
     *fields_size_p = ((buf[12] << 0)
                       | (buf[13] << 8)
                       | (buf[14] << 16)
@@ -146,11 +145,58 @@ static int read_fixed_header(int fd,
     return 0;
 }
 
+static int read_header_field(uint8_t *buf_p, int offset, int size)
+{
+    int field;
+    int signature_size;
+    char *signature_p;
+    int value_size;
+    int rest;
+
+    rest = (offset % 8);
+
+    if (rest > 0) {
+        offset += (8 - rest);
+    }
+
+    field = buf_p[offset];
+    offset++;
+    printf("Header field: %d\n", field);
+    signature_size = buf_p[offset];
+    offset++;
+    signature_p = &buf_p[offset];
+    printf("Signature: %s\n", signature_p);
+    offset += (signature_size + 1);
+
+    if (strcmp(signature_p, "s") == 0) {
+        value_size = ((buf_p[offset] << 0)
+                      | (buf_p[offset + 1] << 8)
+                      | (buf_p[offset + 2] << 16)
+                      | (buf_p[offset + 3] << 24));
+        offset += 4;
+        printf("String: %s\n", &buf_p[offset]);
+        offset += (value_size + 1);
+    } else if (strcmp(signature_p, "u") == 0) {
+        printf("u = %d\n", ((buf_p[offset + 0] << 0)
+                            | (buf_p[offset + 1] << 8)
+                            | (buf_p[offset + 2] << 16)
+                            | (buf_p[offset + 3] << 24)));
+        offset += 4;
+    } else {
+        printf("Ignoring field(s).\n");
+        offset = size;
+    }
+
+    return offset;
+}
+
 static int read_header_fields(int fd, int size)
 {
     uint8_t buf[4096];
     int rest;
     int read_size;
+    int offset;
+    int res;
 
     read_size = size;
     rest = (size % 8);
@@ -165,6 +211,15 @@ static int read_header_fields(int fd, int size)
 
     printf("Header fields:\n");
     dbgh(&buf, size);
+    offset = 0;
+
+    while (offset < size) {
+        offset = read_header_field(&buf[0], offset, size);
+
+        if (offset < 0) {
+            return -1;
+        }
+    }
 
     return 0;
 }
