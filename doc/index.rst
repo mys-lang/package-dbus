@@ -12,7 +12,7 @@ Project: https://github.com/mys-lang/package-dbus
 Examples
 ========
 
-See https://github.com/mys-lang/package-dbus/examples/basic.
+See https://github.com/mys-lang/package-dbus/tree/main/examples/basic.
 
 API
 ===
