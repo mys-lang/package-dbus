@@ -1,13 +1,13 @@
-from fiber import Fiber
-from fiber import sleep
 from dbus import SessionBus
 from dbus.types import Double
 from dbus.types import String
 from dbus.types import Type
-from .dbus_basic_server import BasicObject
-from .dbus_basic_server import BasicDemoInterface
-from random.pseudo import randint
+from fiber import Fiber
+from fiber import sleep
 from os import BinaryFile
+from random.pseudo import randint
+from .dbus_basic_server import BasicDemoInterface
+from .dbus_basic_server import BasicObject
 
 class BasicDemo(BasicDemoInterface):
     bus: SessionBus
