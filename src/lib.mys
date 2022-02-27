@@ -1,16 +1,33 @@
 class Bus:
+    _handler: Handler
+
+    def __init__(self, handler: Handler):
+        self._handler = handler
+        self._reader = Reader(self)
 
     def start(self):
-        pass
+        """Connect to the bus.
+
+        """
+
+        self._reader.start()
 
     def stop(self):
-        pass
+        """Disconnect from the bus once all ongoing calls have completed.
+
+        """
 
     def join(self):
-        pass
+        """Wait for the bus to be stopped.
+
+        """
 
     def add_object_client(self, service: string, path: string, object: Object):
-        pass
+        """Add given client object.
+
+        """
 
     def add_object_server(self, service: string, path: string, object: Object):
-        pass
+        """Add given server object.
+
+        """
