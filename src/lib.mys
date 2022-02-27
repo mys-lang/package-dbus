@@ -1,16 +1,19 @@
+class Handler:
+    pass
+
+class Object:
+    pass
+
 class Bus:
     _handler: Handler
 
     def __init__(self, handler: Handler):
         self._handler = handler
-        self._reader = Reader(self)
 
     def start(self):
         """Connect to the bus.
 
         """
-
-        self._reader.start()
 
     def stop(self):
         """Disconnect from the bus once all ongoing calls have completed.
