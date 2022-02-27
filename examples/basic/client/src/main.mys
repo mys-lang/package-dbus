@@ -1,9 +1,9 @@
-from fiber import sleep
 from argparse import Parser
 from dbus import SessionBus
 from dbus.types import Double
-from .dbus_basic_client import BasicObject
+from fiber import sleep
 from .dbus_basic_client import BasicDemoInterface
+from .dbus_basic_client import BasicObject
 
 class BasicDemo(BasicDemoInterface):
 
