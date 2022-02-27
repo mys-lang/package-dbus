@@ -1,43 +1,50 @@
 # This file was genrated by dbus.py.
 
 from dbus.client import Object
+from dbus.types import Type
 
 @trait
 class BasicDemoInterface:
 
-    def status(self, message: Variant):
+    def count(self, value: i64):
         pass
 
-class BasicObjectHandler(Object):
-    basic_demo: BasicDemoInterface
+# class BasicObjectHandler(Object):
+#     basic_demo: BasicDemoInterface
+#
+#     def on_message(self, data: Reader):
+#         match name:
+#             case "Random":
+#                 self.basic_demo.random()
+#             case "Echo":
+#                 output = self.basic_demo.basic(data.read_string())
+#             case "Cat":
+#                 output = self.basic_demo.cat(data.read_string())
+#             case "Sum":
+#                 output = self.basic_demo.cat(data.read_array_i32())
 
-    def on_message(self, data: Reader):
-        match name:
-            case "Random":
-                self.basic_demo.random()
-            case "Echo":
-                output = self.basic_demo.basic(data.read_string())
-            case "Cat":
-                output = self.basic_demo.cat(data.read_string())
-            case "Sum":
-                output = self.basic_demo.cat(data.read_array_i32())
+class BasicObject(Object):
 
-class BasicObject:
+    def __init__(self, basic_demo_interface: BasicDemoInterface):
+        pass
 
     def random(self) -> i32:
-        pass
+        raise NotImplementedError()
 
     def hello(self, name: string) -> string:
-        pass
+        raise NotImplementedError()
 
-    def echo(self, input: string) -> string:
-        pass
+    def echo(self, input: Type) -> Type:
+        raise NotImplementedError()
 
     def cat(self, file: string) -> bytes:
-        pass
+        raise NotImplementedError()
 
     def sum(self, ints: [i32]) -> i32:
-        pass
+        raise NotImplementedError()
 
     def info(self) -> {string: string}:
-        pass
+        raise NotImplementedError()
+
+    def exit(self) -> string:
+        raise NotImplementedError()

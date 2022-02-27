@@ -22,6 +22,10 @@ jobs:
     - name: Test
       run: |
         mys test
+    - name: Basic example
+      run: |
+        mys -C examples/basic/client build
+        mys -C examples/basic/server build
 
   release:
     needs: [linux]

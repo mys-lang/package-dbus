@@ -1,6 +1,7 @@
 # This file was genrated by dbus.py.
 
-from dbus import Object
+from dbus.server import Object
+from dbus.types import Type
 
 @trait
 class BasicDemoInterface:
@@ -11,7 +12,7 @@ class BasicDemoInterface:
     def hello(self, name: string) -> string:
         pass
 
-    def echo(self, input: string) -> string:
+    def echo(self, input: Type) -> Type:
         pass
 
     def cat(self, file: string) -> bytes:
@@ -23,19 +24,22 @@ class BasicDemoInterface:
     def info(self) -> {string: string}:
         pass
 
-class BasicObject(Object):
-    basic_demo: BasicDemo
-
-    def on_method_call(self, data: Reader):
-        match name:
-            case "Random":
-                self.basic_demo.random()
-            case "Echo":
-                output = self.basic_demo.basic(data.read_variant())
-            case "Cat":
-                output = self.basic_demo.cat(data.read_string())
-            case "Sum":
-                output = self.basic_demo.sum(data.read_array_i32())
-
-    def signal_status(self, message: Variant):
+    def exit(self) -> string:
         pass
+
+class BasicObject(Object):
+    basic_demo: BasicDemoInterface
+
+#     def on_method_call(self, data: Reader):
+#         match name:
+#             case "Random":
+#                 self.basic_demo.random()
+#             case "Echo":
+#                 output = self.basic_demo.basic(data.read_variant())
+#             case "Cat":
+#                 output = self.basic_demo.cat(data.read_string())
+#             case "Sum":
+#                 output = self.basic_demo.sum(data.read_array_i32())
+
+    def signal_count(self, value: i64):
+        raise NotImplementedError()

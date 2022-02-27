@@ -1,13 +1,13 @@
+from .client import Object as ClientObject
+from .server import Object as ServerObject
+
 class Handler:
     pass
 
-class Object:
-    pass
-
-class Bus:
+class SessionBus:
     _handler: Handler
 
-    def __init__(self, handler: Handler):
+    def __init__(self, handler: Handler = None):
         self._handler = handler
 
     def start(self):
@@ -25,12 +25,18 @@ class Bus:
 
         """
 
-    def add_object_client(self, service: string, path: string, object: Object):
+    def add_object_client(self,
+                          service: string,
+                          path: string,
+                          object: ClientObject):
         """Add given client object.
 
         """
 
-    def add_object_server(self, service: string, path: string, object: Object):
+    def add_object_server(self,
+                          service: string,
+                          path: string,
+                          object: ServerObject):
         """Add given server object.
 
         """

@@ -3,21 +3,24 @@ from fiber import sleep
 from dbus import SessionBus
 from dbus.types import Double
 from dbus.types import String
+from dbus.types import Type
 from .dbus_basic_server import BasicObject
 from .dbus_basic_server import BasicDemoInterface
+from random.pseudo import randint
+from os import BinaryFile
 
 class BasicDemo(BasicDemoInterface):
     bus: SessionBus
 
     def random(self) -> i32:
-        return randint()
+        return i32(randint(0, 100))
 
     def hello(self, name: string) -> string:
         print(name)
 
         return "Hi!"
 
-    def echo(self, input: Variant) -> Variant:
+    def echo(self, input: Type) -> Type:
         return input
 
     def cat(self, file: string) -> bytes:
@@ -34,7 +37,7 @@ class BasicDemo(BasicDemoInterface):
 
         return "Bye!"
 
-def signal_counts(server):
+def signal_counts(server: BasicObject):
     count = 1
 
     while True:
