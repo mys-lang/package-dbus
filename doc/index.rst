@@ -9,6 +9,8 @@ D-Bus in the `Mys programming language`_.
 
 Project: https://github.com/mys-lang/package-dbus
 
+D-Bus specification: https://dbus.freedesktop.org/doc/dbus-specification.html
+
 Examples
 ========
 
