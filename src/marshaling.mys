@@ -1,0 +1,169 @@
+from .types import Type
+from .types import Byte
+from .types import Boolean
+from .types import Int16
+from .types import Uint16
+from .types import Int32
+from .types import Uint32
+from .types import Int64
+from .types import Uint64
+from .types import Double
+from .types import String
+from .types import ObjectPath
+from .types import Signature
+
+class Reader:
+    pass
+
+class Writer:
+    _data: bytes
+
+    def __init__(self):
+        self._data = b""
+
+    def write_u8(self, value: u8):
+        self._data += value
+
+    def write_i16(self, value: i16):
+        self.write_u16(u16(value))
+
+    def write_u16(self, value: u16):
+        self._data += u8(value >> 8)
+        self._data += u8(value >> 0)
+
+    def write_i32(self, value: i32):
+        self.write_u32(u32(value))
+
+    def write_u32(self, value: u32):
+        self._data += u8(value >> 24)
+        self._data += u8(value >> 16)
+        self._data += u8(value >> 8)
+        self._data += u8(value >> 0)
+
+    def write_i64(self, value: i64):
+        self.write_u64(u64(value))
+
+    def write_u64(self, value: u64):
+        self._data += u8(value >> 56)
+        self._data += u8(value >> 48)
+        self._data += u8(value >> 40)
+        self._data += u8(value >> 32)
+        self._data += u8(value >> 24)
+        self._data += u8(value >> 16)
+        self._data += u8(value >> 8)
+        self._data += u8(value >> 0)
+
+    def write_f64(self, value: f64):
+        value_u64: u64 = 0
+        c"value_u64 = *((u64 *)(&value));"
+        self.write_u64(value_u64)
+
+    def write_string(self, value: string):
+        utf8 = value.to_utf8()
+        self.write_u32(u32(len(utf8)))
+
+        for i in range(i64(len(utf8))):
+            self.write_u8(utf8[i])
+
+        self.write_u8(0)
+
+    def finalize(self) -> bytes:
+        return self._data
+
+def marshal(value: Type, big_endian: bool = True) -> bytes:
+    """Marshal given type.
+
+    """
+
+    writer = Writer()
+
+    match value:
+        case Byte() as byte:
+            writer.write_u8(byte.value)
+        case Boolean() as boolean:
+            writer.write_u32(u32(boolean.value))
+        case Int16() as int16:
+            writer.write_i16(int16.value)
+        case Uint16() as uint16:
+            writer.write_u16(uint16.value)
+        case Int32() as int32:
+            writer.write_i32(int32.value)
+        case Uint32() as uint32:
+            writer.write_u32(uint32.value)
+        case Int64() as int64:
+            writer.write_i64(int64.value)
+        case Uint64() as uint64:
+            writer.write_u64(uint64.value)
+        case Double() as double_:
+            writer.write_f64(double_.value)
+        case String() as string:
+            writer.write_string(string.value)
+        case ObjectPath() as object_path:
+            writer.write_string(object_path.value)
+        case Signature() as signature:
+            writer.write_string(signature.value)
+
+    return writer.finalize()
+
+def unmarshal(data: bytes, big_endian: bool = True) -> Type:
+    """Unmarshal given data.
+
+    """
+
+    raise NotImplementedError()
+
+@test
+def test_marshal_byte():
+    assert marshal(Byte(0x34)) == b"\x34"
+
+@test
+def test_marshal_boolean():
+    assert marshal(Boolean(False)) == b"\x00\x00\x00\x00"
+    assert marshal(Boolean(True)) == b"\x00\x00\x00\x01"
+
+@test
+def test_marshal_int16():
+    assert marshal(Int16(0x1234)) == b"\x12\x34"
+    assert marshal(Int16(-2)) == b"\xff\xfe"
+
+@test
+def test_marshal_uint16():
+    assert marshal(Uint16(0x1234)) == b"\x12\x34"
+
+@test
+def test_marshal_int32():
+    assert marshal(Int32(0x12345678)) == b"\x12\x34\x56\x78"
+    assert marshal(Int32(-2)) == b"\xff\xff\xff\xfe"
+
+@test
+def test_marshal_uint32():
+    assert marshal(Uint32(0x12345678)) == b"\x12\x34\x56\x78"
+
+@test
+def test_marshal_int64():
+    assert marshal(Int64(0x12345678abcdef)) == b"\x00\x12\x34\x56\x78\xab\xcd\xef"
+    assert marshal(Int64(-2)) == b"\xff\xff\xff\xff\xff\xff\xff\xfe"
+
+@test
+def test_marshal_uint64():
+    assert marshal(Uint64(0x12345678abcdef)) == b"\x00\x12\x34\x56\x78\xab\xcd\xef"
+
+@test
+def test_marshal_double():
+    assert marshal(Double(0.0)) == b"\x00\x00\x00\x00\x00\x00\x00\x00"
+    assert marshal(Double(1.0)) == b"\x3f\xf0\x00\x00\x00\x00\x00\x00"
+    assert marshal(Double(125.6)) == b"\x40\x5f\x66\x66\x66\x66\x66\x66"
+
+@test
+def test_marshal_string():
+    assert marshal(String("")) == b"\x00\x00\x00\x00\x00"
+    assert marshal(String("foo")) == b"\x00\x00\x00\x03\x66\x6f\x6f\x00"
+
+@test
+def test_marshal_object_path():
+    assert marshal(ObjectPath("/Example")) == (
+        b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00")
+
+@test
+def test_marshal_signature():
+    assert marshal(Signature("usi")) == b"\x00\x00\x00\x03\x75\x73\x69\x00"
