@@ -1,6 +1,17 @@
 @trait
 class Type:
-    pass
+
+    def to_int32(self) -> i32:
+        raise NotImplementedError()
+
+    def to_string(self) -> string:
+        raise NotImplementedError()
+
+    def to_array(self) -> [Type]:
+        raise NotImplementedError()
+
+    def to_byte(self) -> u8:
+        raise NotImplementedError()
 
 class Byte(Type):
     """A BYTE. Type code 'y'.
@@ -8,6 +19,9 @@ class Byte(Type):
     """
 
     value: u8
+
+    def to_byte(self) -> u8:
+        return self.value
 
 class Boolean(Type):
     """A BOOLEAN. Type code 'b'.
@@ -36,6 +50,9 @@ class Int32(Type):
     """
 
     value: i32
+
+    def to_int32(self) -> i32:
+        return self.value
 
 class Uint32(Type):
     """An UINT32. Type code 'u'.
@@ -72,6 +89,9 @@ class String(Type):
 
     value: string
 
+    def to_string(self) -> string:
+        return self.value
+
 class UnixFd(Type):
     """A UNIX_FD. Type code 'h'.
 
@@ -97,6 +117,9 @@ class Array(Type):
     """
 
     value: [Type]
+
+    def to_array(self) -> [Type]:
+        return self.value
 
 class Struct(Type):
     """A STRUCT. Type code 'r', '(' and ')'.

@@ -2,6 +2,10 @@
 
 from dbus.client import Object
 from dbus.types import Type
+from dbus.types import Int32
+from dbus.types import String
+from dbus.types import Array
+from dbus.types import Byte
 
 @trait
 class BasicDemoInterface:
@@ -28,20 +32,37 @@ class BasicObject(Object):
     def __init__(self, basic_demo_interface: BasicDemoInterface):
         pass
 
+    def call(self, method: string, argument: Type, returns: Type) -> Type:
+        return returns
+
     def random(self) -> i32:
-        raise NotImplementedError()
+        result = self.call("Random", None, Int32(5))
+
+        return result.to_int32()
 
     def hello(self, name: string) -> string:
-        raise NotImplementedError()
+        result = self.call("Hello", String(name), String("Hoho!"))
+
+        return result.to_string()
 
     def echo(self, input: Type) -> Type:
-        raise NotImplementedError()
+        return self.call("Echo", input, String("Variant"))
 
-    def cat(self, file: string) -> bytes:
-        raise NotImplementedError()
+    def cat(self, path: string) -> bytes:
+        result = self.call("Cat", String(path), Array([Byte(1), Byte(2)]))
+        data = b""
+
+        for byte in result.to_array():
+            data += byte.to_byte()
+
+        return data
 
     def sum(self, ints: [i32]) -> i32:
-        raise NotImplementedError()
+        result = self.call("Sum",
+                           Array([Int32(item) for item in ints]),
+                           Int32(5))
+
+        return result.to_int32()
 
     def info(self) -> {string: string}:
         raise NotImplementedError()
