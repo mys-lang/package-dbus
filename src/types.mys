@@ -3,46 +3,111 @@ class Type:
     pass
 
 class Byte(Type):
-    pass
+    """A BYTE. Type code 'y'.
+
+    """
+
+    value: u8
 
 class Boolean(Type):
-    pass
+    """A BOOLEAN. Type code 'b'.
+
+    """
+
+    value: bool
 
 class Int16(Type):
-    pass
+    """An INT16. Type code 'n'.
+
+    """
+
+    value: i16
 
 class Uint16(Type):
-    pass
+    """An UINT16. Type code 'q'.
+
+    """
+
+    value: u16
 
 class Int32(Type):
-    pass
+    """An INT32. Type code 'i'.
+
+    """
+
+    value: i32
 
 class Uint32(Type):
-    pass
+    """An UINT32. Type code 'u'.
+
+    """
+
+    value: u32
 
 class Int64(Type):
-    pass
+    """An INT64. Type code 'x'.
+
+    """
+
+    value: i64
 
 class Uint64(Type):
-    pass
+    """An UINT64. Type code 't'.
+
+    """
+
+    value: u64
 
 class Double(Type):
-    pass
+    """A DOUBLE. Type code 'd'.
+
+    """
+
+    value: f64
 
 class String(Type):
-    pass
+    """A STRING. Type code 's'.
+
+    """
+
+    value: string
+
+class UnixFd(Type):
+    """A UNIX_FD. Type code 'h'.
+
+    """
 
 class ObjectPath(Type):
-    pass
+    """An OBJECT_PATH. Type code 'o'.
+
+    """
+
+    value: string
 
 class Signature(Type):
-    pass
+    """A SIGNATURE. Type code 'g'.
+
+    """
+
+    value: string
 
 class Array(Type):
-    pass
+    """An ARRAY. Type code 'a'.
+
+    """
+
+    value: [Type]
 
 class Struct(Type):
-    pass
+    """A STRUCT. Type code 'r', '(' and ')'.
+
+    """
+
+    value: [Type]
 
 class Dict(Type):
-    pass
+    """Zero or more DICT_ENTRY. Type code 'e', '{' and '}'.
+
+    """
+
+    value: {Type: Type}

@@ -13,7 +13,7 @@
       <arg type="v" name="output" direction="out"/>
     </method>
     <method name="Cat">
-      <arg type="s" name="file" direction="in"/>
+      <arg type="s" name="path" direction="in"/>
       <arg type="ay" name="contents" direction="out"/>
     </method>
     <method name="Sum">
@@ -27,7 +27,7 @@
       <arg type="s" names="message" direction="out"/>
     </method>
     <signal name="Count">
-      <arg type="i" name="value"/>
+      <arg type="x" name="value"/>
     </signal>
   </interface>
 </node>
