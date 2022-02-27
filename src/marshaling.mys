@@ -102,6 +102,8 @@ def marshal(value: Type, big_endian: bool = True) -> bytes:
             writer.write_string(object_path.value)
         case Signature() as signature:
             writer.write_string(signature.value)
+        case _:
+            raise NotImplementedError()
 
     return writer.finalize()
 
