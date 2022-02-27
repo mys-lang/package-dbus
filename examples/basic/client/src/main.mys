@@ -20,6 +20,7 @@ def main(argv: [string]):
     bus.add_object_client("com.example.Basic", "/Basic1", client)
     bus.start()
 
+    print(client.random())
     print(client.hello("Hello!"))
     print(client.echo(Double(5.0)))
     print(client.cat(__file__))

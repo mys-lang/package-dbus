@@ -23,8 +23,8 @@ class BasicDemo(BasicDemoInterface):
     def echo(self, input: Type) -> Type:
         return input
 
-    def cat(self, file: string) -> bytes:
-        return BinaryFile(file).read()
+    def cat(self, path: string) -> bytes:
+        return BinaryFile(path).read()
 
     def sum(self, ints: [i32]) -> i32:
         return sum(ints)

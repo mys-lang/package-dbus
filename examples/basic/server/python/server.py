@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 
-usage = """Usage:
-python3 server.py &
-python3 client.py
-python3 client.py --exit-service
-"""
-
 # Copyright (C) 2004-2006 Red Hat Inc. <http://www.redhat.com/>
 # Copyright (C) 2005-2007 Collabora Ltd. <http://www.collabora.co.uk/>
 #
@@ -37,48 +31,61 @@ import dbus
 import dbus.service
 import dbus.mainloop.glib
 
-class DemoException(dbus.DBusException):
-    _dbus_error_name = 'com.example.DemoException'
 
 class SomeObject(dbus.service.Object):
 
-    @dbus.service.method("com.example.SampleInterface",
-                         in_signature='s', out_signature='as')
-    def HelloWorld(self, hello_message):
-        print("service:", str(hello_message))
-        return ["Hello", " from example-service.py", "with unique name",
-                session_bus.get_unique_name()]
+    @dbus.service.method("org.example.BasicDemo",
+                         in_signature='',
+                         out_signature='i')
+    def Random(self):
+        pass
 
-    @dbus.service.method("com.example.SampleInterface",
-                         in_signature='', out_signature='')
-    def RaiseException(self):
-        raise DemoException('The RaiseException method does what you might '
-                            'expect')
+    @dbus.service.method("org.example.BasicDemo",
+                         in_signature='s',
+                         out_signature='s')
+    def Hello(self, name):
+        pass
 
-    @dbus.service.method("com.example.SampleInterface",
-                         in_signature='', out_signature='(ss)')
-    def GetTuple(self):
-        return ("Hello Tuple", " from example-service.py")
+    @dbus.service.method("org.example.BasicDemo",
+                         in_signature='v',
+                         out_signature='v')
+    def Echo(self, name):
+        pass
 
-    @dbus.service.method("com.example.SampleInterface",
-                         in_signature='', out_signature='a{ss}')
-    def GetDict(self):
-        return {"first": "Hello Dict", "second": " from example-service.py"}
+    @dbus.service.method("org.example.BasicDemo",
+                         in_signature='s',
+                         out_signature='ay')
+    def Cat(self, name):
+        pass
 
-    @dbus.service.method("com.example.SampleInterface",
-                         in_signature='', out_signature='')
+    @dbus.service.method("org.example.BasicDemo",
+                         in_signature='ai',
+                         out_signature='i')
+    def Sum(self, name):
+        pass
+
+    @dbus.service.method("org.example.BasicDemo",
+                         in_signature='',
+                         out_signature='a{ss}')
+    def Info(self, name):
+        pass
+
+    @dbus.service.method("org.example.BasicDemo",
+                         in_signature='',
+                         out_signature='s')
     def Exit(self):
-        mainloop.quit()
+        pass
 
 
-if __name__ == '__main__':
+def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
 
     session_bus = dbus.SessionBus()
-    name = dbus.service.BusName("com.example.SampleService", session_bus)
+    name = dbus.service.BusName("org.example.BasicDemo", session_bus)
     object = SomeObject(session_bus, '/SomeObject')
 
     mainloop = GLib.MainLoop()
-    print("Running example service.")
-    print(usage)
     mainloop.run()
+
+if __name__ == '__main__':
+    main()
