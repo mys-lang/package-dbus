@@ -1,8 +1,8 @@
 from fiber import Fiber
 from fiber import sleep
 from dbus import SessionBus
-from dbus.variant import Double
-from dbus.variant import String
+from dbus.types import Double
+from dbus.types import String
 from .dbus_basic_server import BasicObject
 from .dbus_basic_server import BasicDemoInterface
 

@@ -1,0 +1,48 @@
+@trait
+class Type:
+    pass
+
+class Byte(Type):
+    pass
+
+class Boolean(Type):
+    pass
+
+class Int16(Type):
+    pass
+
+class Uint16(Type):
+    pass
+
+class Int32(Type):
+    pass
+
+class Uint32(Type):
+    pass
+
+class Int64(Type):
+    pass
+
+class Uint64(Type):
+    pass
+
+class Double(Type):
+    pass
+
+class String(Type):
+    pass
+
+class ObjectPath(Type):
+    pass
+
+class Signature(Type):
+    pass
+
+class Array(Type):
+    pass
+
+class Struct(Type):
+    pass
+
+class Dict(Type):
+    pass
