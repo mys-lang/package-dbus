@@ -7,6 +7,7 @@ from .dbus_basic_server import BasicObject
 from .dbus_basic_server import BasicDemoInterface
 
 class BasicDemo(BasicDemoInterface):
+    bus: SessionBus
 
     def random(self) -> i32:
         return randint()
@@ -28,28 +29,27 @@ class BasicDemo(BasicDemoInterface):
     def info(self) -> {string: string}:
         return {"foo": "1", "bar": "2"}
 
-class Basicer(Fiber):
-    bus: Bus
-    basic_object: BasicObject
+    def exit(self) -> string:
+        self.bus.stop()
 
-    def run(self):
-        delay = 1.0
+        return "Bye!"
 
-        while True:
-            self.basic_object.signal_status(Double(delay))
-            sleep(delay)
-            delay += 1.0
+def signal_counts(server):
+    count = 1
 
-            if delay > 5.0:
-                self.basic_object.signal_status(String("Bye!"))
-                self.bus.close()
-                break
+    while True:
+        try:
+            server.signal_count(count)
+        except Error:
+            break
+
+        sleep(1.0)
+        count += 1
 
 def main():
     bus = SessionBus()
-    basic_object = BasicObject(BasicDemo())
-    bus.add_object_server("com.example.Basic", "/Basic1", basic_object)
-    basicer = Basicer(bus, basic_object)
-    basicer.start()
-    bus.run()
-    basicer.join()
+    server = BasicObject(BasicDemo(bus))
+    bus.add_object_server("com.example.Basic", "/Basic1", server)
+    bus.start()
+    signal_counts(server)
+    bus.join()

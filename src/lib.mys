@@ -1,0 +1,16 @@
+class Bus:
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
+    def join(self):
+        pass
+
+    def add_object_client(self, service: string, path: string, object: Object):
+        pass
+
+    def add_object_server(self, service: string, path: string, object: Object):
+        pass

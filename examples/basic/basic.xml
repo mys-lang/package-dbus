@@ -20,11 +20,14 @@
       <arg type="ai" name="ints" direction="in"/>
       <arg type="i" names="sum" direction="out"/>
     </method>
-    <signal name="Status">
-      <arg type="v" name="message"/>
-    </signal>
     <method name="Info">
       <arg type="a{ss}" name="info" direction="out"/>
     </method>
+    <method name="Exit">
+      <arg type="s" names="message" direction="out"/>
+    </method>
+    <signal name="Count">
+      <arg type="i" name="value"/>
+    </signal>
   </interface>
 </node>

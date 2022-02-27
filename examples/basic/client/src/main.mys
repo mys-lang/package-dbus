@@ -1,4 +1,5 @@
-from fiber import Fiber
+from fiber import sleep
+from argparse import Parser
 from dbus import SessionBus
 from dbus.variant import Double
 from dbus.variant import String
@@ -6,30 +7,30 @@ from .dbus_basic_client import BasicObject
 from .dbus_basic_client import BasicDemoInterface
 
 class BasicDemo(BasicDemoInterface):
-    bus: Bus
-    
-    def status(self, message: Variant):
-        print(message)
 
-        match message:
-            case String("Bye!"):
-                self.bus.close()
+    def count(self, value: i64):
+        print(f"Count: {value}")
 
-class Caller(Fiber):
-    basic_client: BasicObject
+def main(argv: [string]):
+    parser = Parser()
+    parser.add_option("--exit")
+    args = parser.parse(argv)
 
-    def run(self):
-        print(basic_client.hello("Hello!"))
-        print(basic_client.echo(Double(5.0)))
-        print(basic_client.cat("README.rst"))
-        print(basic_client.sum([1, 2]))
-        print(basic_client.info())
-        
-def main():
     bus = SessionBus()
-    basic_client = BasicObject(BasicDemo(bus))
-    bus.add_object_client("com.example.Basic", "/Basic1", basic_client)
-    caller = Caller(basic_client)
-    caller.start()
-    bus.run()
-    caller.join()
+    client = BasicObject(BasicDemo())
+    bus.add_object_client("com.example.Basic", "/Basic1", client)
+    bus.start()
+
+    print(client.hello("Hello!"))
+    print(client.echo(Double(5.0)))
+    print(client.cat(__file__))
+    print(client.sum([1, 2]))
+    print(client.info())
+
+    if args.is_present("--exit"):
+        print(client.exit())
+    else:
+        sleep(10.0)
+
+    bus.stop()
+    bus.join()
