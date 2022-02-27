@@ -1,3 +1,5 @@
+import threading
+import time
 from gi.repository import GLib
 
 import dbus
@@ -58,12 +60,35 @@ class SomeObject(dbus.service.Object):
 
         return "Bye!"
 
+    @dbus.service.signal("org.example.BasicDemo", signature='x')
+    def Count(self, value):
+        return value
+
+
+class SignalCount(threading.Thread):
+
+    def __init__(self, server):
+        super().__init__()
+        self._server = server
+
+    def run(self):
+        count = 1
+
+        while True:
+            print(f"Count: {count}")
+            self._server.Count(count)
+            time.sleep(1.0)
+            count += 1
+
 
 def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    session_bus = dbus.SessionBus()
-    name = dbus.service.BusName("org.example.BasicDemo", session_bus)
-    object = SomeObject(session_bus, '/SomeObject')
+    bus = dbus.SessionBus()
+    name = dbus.service.BusName("org.example.BasicDemo", bus)
+    object = SomeObject(bus, '/SomeObject')
+    counts = SignalCount(object)
+    counts.daemon = True
+    counts.start()
     global MAINLOOP
     MAINLOOP = GLib.MainLoop()
     MAINLOOP.run()
