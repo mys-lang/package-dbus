@@ -85,8 +85,8 @@ def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SessionBus()
     name = dbus.service.BusName("org.example.BasicDemo", bus)
-    object = SomeObject(bus, '/Basic1')
-    counts = SignalCount(object)
+    basic_1 = SomeObject(bus, '/Basic1')
+    counts = SignalCount(basic_1)
     counts.daemon = True
     counts.start()
     global MAINLOOP

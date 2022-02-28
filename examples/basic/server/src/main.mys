@@ -37,12 +37,12 @@ class BasicDemo(BasicDemoInterface):
 
         return "Bye!"
 
-def signal_counts(server: BasicObject):
+def signal_counts(basic_1: BasicObject):
     count = 1
 
     while True:
         try:
-            server.signal_count(count)
+            basic_1.signal_count(count)
         except Error:
             break
 
@@ -51,8 +51,8 @@ def signal_counts(server: BasicObject):
 
 def main():
     bus = SessionBus()
-    server = BasicObject("com.example.Basic", "/Basic1", BasicDemo(bus))
-    bus.add_object_server(server)
+    basic_1 = BasicObject("com.example.Basic", "/Basic1", BasicDemo(bus))
+    bus.add_object_server(basic_1)
     bus.start()
-    signal_counts(server)
+    signal_counts(basic_1)
     bus.join()
