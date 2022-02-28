@@ -11,47 +11,59 @@ from .types import Double
 from .types import String
 from .types import ObjectPath
 from .types import Signature
+from .types import Array
+from .types import Struct
+from .types import Dict
 
 class Reader:
     pass
 
 class Writer:
     _data: bytes
+    _pos: i64
 
     def __init__(self):
         self._data = b""
+        self._pos = 0
 
     def write_u8(self, value: u8):
         self._data += value
+        self._pos += 1
 
     def write_i16(self, value: i16):
         self.write_u16(u16(value))
 
     def write_u16(self, value: u16):
-        self._data += u8(value >> 8)
-        self._data += u8(value >> 0)
+        self.write_u8(u8(value >> 8))
+        self.write_u8(u8(value >> 0))
 
     def write_i32(self, value: i32):
         self.write_u32(u32(value))
 
     def write_u32(self, value: u32):
-        self._data += u8(value >> 24)
-        self._data += u8(value >> 16)
-        self._data += u8(value >> 8)
-        self._data += u8(value >> 0)
+        self.write_u8(u8(value >> 24))
+        self.write_u8(u8(value >> 16))
+        self.write_u8(u8(value >> 8))
+        self.write_u8(u8(value >> 0))
+
+    def write_u32_at(self, pos: i64, value: u32):
+        self._data[pos] = u8(value >> 24)
+        self._data[pos + 1] = u8(value >> 16)
+        self._data[pos + 2] = u8(value >> 8)
+        self._data[pos + 3] = u8(value >> 0)
 
     def write_i64(self, value: i64):
         self.write_u64(u64(value))
 
     def write_u64(self, value: u64):
-        self._data += u8(value >> 56)
-        self._data += u8(value >> 48)
-        self._data += u8(value >> 40)
-        self._data += u8(value >> 32)
-        self._data += u8(value >> 24)
-        self._data += u8(value >> 16)
-        self._data += u8(value >> 8)
-        self._data += u8(value >> 0)
+        self.write_u8(u8(value >> 56))
+        self.write_u8(u8(value >> 48))
+        self.write_u8(u8(value >> 40))
+        self.write_u8(u8(value >> 32))
+        self.write_u8(u8(value >> 24))
+        self.write_u8(u8(value >> 16))
+        self.write_u8(u8(value >> 8))
+        self.write_u8(u8(value >> 0))
 
     def write_f64(self, value: f64):
         value_u64: u64 = 0
@@ -67,16 +79,71 @@ class Writer:
 
         self.write_u8(0)
 
+    def get_pos(self) -> i64:
+        return self._pos
+
+    def align(self, alignment: i64):
+        rest = (self._pos % alignment)
+
+        if rest > 0:
+            for _ in range(alignment - rest):
+                self.write_u8(0)
+
     def finalize(self) -> bytes:
         return self._data
 
-def marshal(value: Type, big_endian: bool = True) -> bytes:
-    """Marshal given type.
+def _get_alignment(value: Type) -> i64:
+    match value:
+        case Byte():
+            return 1
+        case Boolean():
+            return 4
+        case Int16():
+            return 2
+        case Uint16():
+            return 2
+        case Int32():
+            return 4
+        case Uint32():
+            return 4
+        case Int64():
+            return 8
+        case Uint64():
+            return 8
+        case Double():
+            return 8
+        case String():
+            return 4
+        case ObjectPath():
+            return 4
+        case Signature():
+            return 1
+        case Array():
+            return 4
+        case Struct():
+            return 8
+        case Dict():
+            return 8
+        case _:
+            raise NotImplementedError()
 
-    """
+def _marshal_array(value: Array, writer: Writer):
+    size_pos = writer.get_pos()
+    writer.write_u32(0)
+    data_pos = -1
 
-    writer = Writer()
+    for item in value.to_array():
+        writer.align(_get_alignment(item))
 
+        if data_pos == -1:
+            data_pos = writer.get_pos()
+
+        _marshal(item, writer)
+
+    data_size = writer.get_pos() - data_pos
+    writer.write_u32_at(size_pos, u32(data_size))
+
+def _marshal(value: Type, writer: Writer):
     match value:
         case Byte() as byte:
             writer.write_u8(byte.value)
@@ -102,8 +169,18 @@ def marshal(value: Type, big_endian: bool = True) -> bytes:
             writer.write_string(object_path.value)
         case Signature() as signature:
             writer.write_string(signature.value)
+        case Array() as array:
+            _marshal_array(array, writer)
         case _:
             raise NotImplementedError()
+
+def marshal(value: Type, big_endian: bool = True) -> bytes:
+    """Marshal given type.
+
+    """
+
+    writer = Writer()
+    _marshal(value, writer)
 
     return writer.finalize()
 
@@ -169,3 +246,22 @@ def test_marshal_object_path():
 @test
 def test_marshal_signature():
     assert marshal(Signature("usi")) == b"\x00\x00\x00\x03\x75\x73\x69\x00"
+
+@test
+def test_marshal_array_int64():
+    assert marshal(Array([Int64(5)])) == (
+        b"\x00\x00\x00\x08"
+        b"\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x05")
+    assert marshal(Array([Int64(5), Int64(7)])) == (
+        b"\x00\x00\x00\x10"
+        b"\x00\x00\x00\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x05"
+        b"\x00\x00\x00\x00\x00\x00\x00\x07")
+
+@test
+def test_marshal_array_int32():
+    assert marshal(Array([Int32(5), Int32(7)])) == (
+        b"\x00\x00\x00\x08"
+        b"\x00\x00\x00\x05"
+        b"\x00\x00\x00\x07")
