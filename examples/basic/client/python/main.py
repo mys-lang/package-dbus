@@ -17,7 +17,7 @@ def main():
 
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SessionBus()
-    object = bus.get_object("org.example.BasicDemo", "/SomeObject")
+    object = bus.get_object("org.example.BasicDemo", "/Basic1")
     interface = dbus.Interface(object, "org.example.BasicDemo")
     interface.connect_to_signal("Count", count_signal_handler)
     print(interface.Random())
