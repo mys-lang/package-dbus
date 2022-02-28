@@ -34,10 +34,13 @@ class BasicObject(Object):
         pass
 
     def call(self, method: string, argument: Type, returns: Type) -> Type:
+        print("Method:")
+        print(" ", method)
+        print(" ", marshal(String(method)))
         if argument is not None:
-            print("Argument:")
-            print("  ", argument)
-            print("  ", marshal(argument))
+            print("  Argument:")
+            print("   ", argument)
+            print("   ", marshal(argument))
 
         return returns
 

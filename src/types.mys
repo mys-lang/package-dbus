@@ -10,6 +10,9 @@ class Type:
     def to_array(self) -> [Type]:
         raise NotImplementedError()
 
+    def to_struct(self) -> [Type]:
+        raise NotImplementedError()
+
     def to_byte(self) -> u8:
         raise NotImplementedError()
 
@@ -127,6 +130,9 @@ class Struct(Type):
     """
 
     value: [Type]
+
+    def to_struct(self) -> [Type]:
+        return self.value
 
 class Dict(Type):
     """Zero or more DICT_ENTRY. Type code 'e', '{' and '}'.

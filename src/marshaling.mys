@@ -140,8 +140,14 @@ def _marshal_array(value: Array, writer: Writer):
 
         _marshal(item, writer)
 
-    data_size = writer.get_pos() - data_pos
-    writer.write_u32_at(size_pos, u32(data_size))
+    if data_pos != -1:
+        data_size = writer.get_pos() - data_pos
+        writer.write_u32_at(size_pos, u32(data_size))
+
+def _marshal_struct(value: Struct, writer: Writer):
+    for item in value.to_struct():
+        writer.align(_get_alignment(item))
+        _marshal(item, writer)
 
 def _marshal(value: Type, writer: Writer):
     match value:
@@ -171,6 +177,8 @@ def _marshal(value: Type, writer: Writer):
             writer.write_string(signature.value)
         case Array() as array:
             _marshal_array(array, writer)
+        case Struct() as struct_:
+            _marshal_struct(struct_, writer)
         case _:
             raise NotImplementedError()
 
@@ -265,3 +273,17 @@ def test_marshal_array_int32():
         b"\x00\x00\x00\x08"
         b"\x00\x00\x00\x05"
         b"\x00\x00\x00\x07")
+
+@test
+def test_marshal_struct_header():
+    header = Struct([
+        Byte(u8(i32('B'))),
+        Byte(1),
+        Byte(0),
+        Byte(1),
+        Uint32(0),
+        Uint32(3),
+        Array([])
+    ])
+    assert marshal(header) == (
+        b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
