@@ -27,10 +27,19 @@ class BasicDemoInterface:
     def exit(self) -> string:
         pass
 
+class BasicDemo:
+
+    def signal_count(self, value: i64):
+        raise NotImplementedError()
+
 class BasicObject(Object):
-    bus_name: string
-    path: string
-    basic_demo: BasicDemoInterface
+    basic_demo: BasicDemo
+
+    def __init__(self,
+                 bus_name: string,
+                 path: string,
+                 basic_demo: BasicDemoInterface):
+        self.basic_demo = BasicDemo()
 
 #     def on_method_call(self, data: Reader):
 #         match name:

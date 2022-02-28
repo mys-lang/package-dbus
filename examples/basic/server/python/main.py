@@ -84,7 +84,7 @@ class SignalCount(threading.Thread):
 def main():
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SessionBus()
-    name = dbus.service.BusName("org.example.BasicDemo", bus)
+    name = dbus.service.BusName("org.example.Basic", bus)
     basic_1 = SomeObject(bus, '/Basic1')
     counts = SignalCount(basic_1)
     counts.daemon = True

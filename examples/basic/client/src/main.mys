@@ -16,19 +16,19 @@ def main(argv: [string]):
     args = parser.parse(argv)
 
     bus = SessionBus()
-    basic_1 = BasicObject("com.example.Basic", "/Basic1", BasicDemo())
+    basic_1 = BasicObject("org.example.Basic", "/Basic1", BasicDemo())
     bus.add_object_client(basic_1)
     bus.start()
 
-    print(basic_1.random())
-    print(basic_1.hello("Hello!"))
-    print(basic_1.echo(Double(5.0)))
-    print(basic_1.cat(__file__))
-    print(basic_1.sum([1, 2]))
-    print(basic_1.info())
+    print(basic_1.basic_demo.random())
+    print(basic_1.basic_demo.hello("Hello!"))
+    print(basic_1.basic_demo.echo(Double(5.0)))
+    print(basic_1.basic_demo.cat(__file__))
+    print(basic_1.basic_demo.sum([1, 2]))
+    print(basic_1.basic_demo.info())
 
     if args.is_present("--exit"):
-        print(basic_1.exit())
+        print(basic_1.basic_demo.exit())
     else:
         sleep(10.0)
 

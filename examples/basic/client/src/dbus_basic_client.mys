@@ -31,13 +31,7 @@ class BasicDemoInterface:
 #             case "Sum":
 #                 output = self.basic_demo.cat(data.read_array_i32())
 
-class BasicObject(Object):
-
-    def __init__(self,
-                 bus_name: string,
-                 path: string,
-                 basic_demo_interface: BasicDemoInterface):
-        pass
+class BasicDemo:
 
     def call(self, method: string, argument: Type, returns: Type) -> Type:
         header = Struct([
@@ -96,3 +90,12 @@ class BasicObject(Object):
 
     def exit(self) -> string:
         raise NotImplementedError()
+
+class BasicObject(Object):
+    basic_demo: BasicDemo
+    
+    def __init__(self,
+                 bus_name: string,
+                 path: string,
+                 basic_demo_interface: BasicDemoInterface):
+        self.basic_demo = BasicDemo()
