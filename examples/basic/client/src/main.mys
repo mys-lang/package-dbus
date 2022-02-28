@@ -16,8 +16,8 @@ def main(argv: [string]):
     args = parser.parse(argv)
 
     bus = SessionBus()
-    client = BasicObject(BasicDemo())
-    bus.add_object_client("com.example.Basic", "/Basic1", client)
+    client = BasicObject("com.example.Basic", "/Basic1", BasicDemo())
+    bus.add_object_client(client)
     bus.start()
 
     print(client.random())

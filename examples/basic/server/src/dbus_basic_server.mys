@@ -28,6 +28,8 @@ class BasicDemoInterface:
         pass
 
 class BasicObject(Object):
+    bus_name: string
+    path: string
     basic_demo: BasicDemoInterface
 
 #     def on_method_call(self, data: Reader):

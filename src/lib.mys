@@ -25,18 +25,12 @@ class SessionBus:
 
         """
 
-    def add_object_client(self,
-                          service: string,
-                          path: string,
-                          object: ClientObject):
+    def add_object_client(self, object: ClientObject):
         """Add given client object.
 
         """
 
-    def add_object_server(self,
-                          service: string,
-                          path: string,
-                          object: ServerObject):
+    def add_object_server(self, object: ServerObject):
         """Add given server object.
 
         """

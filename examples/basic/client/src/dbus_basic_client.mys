@@ -33,7 +33,10 @@ class BasicDemoInterface:
 
 class BasicObject(Object):
 
-    def __init__(self, basic_demo_interface: BasicDemoInterface):
+    def __init__(self,
+                 bus_name: string,
+                 path: string,
+                 basic_demo_interface: BasicDemoInterface):
         pass
 
     def call(self, method: string, argument: Type, returns: Type) -> Type:

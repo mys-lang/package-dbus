@@ -51,8 +51,8 @@ def signal_counts(server: BasicObject):
 
 def main():
     bus = SessionBus()
-    server = BasicObject(BasicDemo(bus))
-    bus.add_object_server("com.example.Basic", "/Basic1", server)
+    server = BasicObject("com.example.Basic", "/Basic1", BasicDemo(bus))
+    bus.add_object_server(server)
     bus.start()
     signal_counts(server)
     bus.join()
