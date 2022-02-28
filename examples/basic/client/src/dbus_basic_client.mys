@@ -93,7 +93,7 @@ class BasicDemo:
 
 class BasicObject(Object):
     basic_demo: BasicDemo
-    
+
     def __init__(self,
                  bus_name: string,
                  path: string,
