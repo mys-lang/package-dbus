@@ -6,6 +6,7 @@ from dbus.types import Int32
 from dbus.types import String
 from dbus.types import Array
 from dbus.types import Byte
+from dbus.marshaling import marshal
 
 @trait
 class BasicDemoInterface:
@@ -33,6 +34,11 @@ class BasicObject(Object):
         pass
 
     def call(self, method: string, argument: Type, returns: Type) -> Type:
+        if argument is not None:
+            print("Argument:")
+            print("  ", argument)
+            print("  ", marshal(argument))
+
         return returns
 
     def random(self) -> i32:
