@@ -14,6 +14,7 @@ from .types import Signature
 from .types import Array
 from .types import Struct
 from .types import Dict
+from .types import Variant
 
 class Reader:
     pass
@@ -34,6 +35,7 @@ class Writer:
         self.write_u16(u16(value))
 
     def write_u16(self, value: u16):
+        self.align(2)
         self.write_u8(u8(value >> 8))
         self.write_u8(u8(value >> 0))
 
@@ -41,6 +43,7 @@ class Writer:
         self.write_u32(u32(value))
 
     def write_u32(self, value: u32):
+        self.align(4)
         self.write_u8(u8(value >> 24))
         self.write_u8(u8(value >> 16))
         self.write_u8(u8(value >> 8))
@@ -56,6 +59,7 @@ class Writer:
         self.write_u64(u64(value))
 
     def write_u64(self, value: u64):
+        self.align(8)
         self.write_u8(u8(value >> 56))
         self.write_u8(u8(value >> 48))
         self.write_u8(u8(value >> 40))
@@ -73,6 +77,15 @@ class Writer:
     def write_string(self, value: string):
         utf8 = value.to_utf8()
         self.write_u32(u32(len(utf8)))
+
+        for i in range(i64(len(utf8))):
+            self.write_u8(utf8[i])
+
+        self.write_u8(0)
+
+    def write_signature(self, value: string):
+        utf8 = value.to_utf8()
+        self.write_u8(u8(len(utf8)))
 
         for i in range(i64(len(utf8))):
             self.write_u8(utf8[i])
@@ -149,6 +162,18 @@ def _marshal_struct(value: Struct, writer: Writer):
         writer.align(_get_alignment(item))
         _marshal(item, writer)
 
+def _marshal_variant(value: Variant, writer: Writer):
+    signature: string = None
+
+    match value.value:
+        case Int32():
+            signature = "i"
+        case _:
+            raise NotImplementedError()
+
+    _marshal(Signature(signature), writer)
+    _marshal(value.value, writer)
+
 def _marshal(value: Type, writer: Writer):
     match value:
         case Byte() as byte:
@@ -174,11 +199,13 @@ def _marshal(value: Type, writer: Writer):
         case ObjectPath() as object_path:
             writer.write_string(object_path.value)
         case Signature() as signature:
-            writer.write_string(signature.value)
+            writer.write_signature(signature.value)
         case Array() as array:
             _marshal_array(array, writer)
         case Struct() as struct_:
             _marshal_struct(struct_, writer)
+        case Variant() as variant:
+            _marshal_variant(variant, writer)
         case _:
             raise NotImplementedError()
 
@@ -253,7 +280,7 @@ def test_marshal_object_path():
 
 @test
 def test_marshal_signature():
-    assert marshal(Signature("usi")) == b"\x00\x00\x00\x03\x75\x73\x69\x00"
+    assert marshal(Signature("usi")) == b"\x03\x75\x73\x69\x00"
 
 @test
 def test_marshal_array_int64():
@@ -287,3 +314,7 @@ def test_marshal_struct_header():
     ])
     assert marshal(header) == (
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
+
+@test
+def test_marshal_variant():
+    assert marshal(Variant(Int32(5))) == b"\x01\x69\x00\x00\x00\x00\x00\x05"

@@ -140,3 +140,10 @@ class Dict(Type):
     """
 
     value: {Type: Type}
+
+class Variant(Type):
+    """A VARIANT.
+
+    """
+
+    value: Type
