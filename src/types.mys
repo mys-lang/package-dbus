@@ -1,6 +1,9 @@
 @trait
 class Type:
 
+    def to_byte(self) -> u8:
+        raise NotImplementedError()
+
     def to_int32(self) -> i32:
         raise NotImplementedError()
 
@@ -13,7 +16,7 @@ class Type:
     def to_struct(self) -> [Type]:
         raise NotImplementedError()
 
-    def to_byte(self) -> u8:
+    def to_dict(self) -> {Type: Type}:
         raise NotImplementedError()
 
 class Byte(Type):
@@ -141,9 +144,13 @@ class Dict(Type):
 
     value: {Type: Type}
 
+    def to_dict(self) -> {Type: Type}:
+        return self.value
+
 class Variant(Type):
     """A VARIANT.
 
     """
 
+    signature: string
     value: Type

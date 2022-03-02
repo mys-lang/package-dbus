@@ -162,16 +162,11 @@ def _marshal_struct(value: Struct, writer: Writer):
         writer.align(_get_alignment(item))
         _marshal(item, writer)
 
+def _marshal_dict(value: Dict, writer: Writer):
+    _marshal_array(Array([Struct([k, v]) for k, v in value.to_dict()]), writer)
+
 def _marshal_variant(value: Variant, writer: Writer):
-    signature: string = None
-
-    match value.value:
-        case Int32():
-            signature = "i"
-        case _:
-            raise NotImplementedError()
-
-    _marshal(Signature(signature), writer)
+    _marshal(Signature(value.signature), writer)
     _marshal(value.value, writer)
 
 def _marshal(value: Type, writer: Writer):
@@ -204,6 +199,8 @@ def _marshal(value: Type, writer: Writer):
             _marshal_array(array, writer)
         case Struct() as struct_:
             _marshal_struct(struct_, writer)
+        case Dict() as dict:
+            _marshal_dict(dict, writer)
         case Variant() as variant:
             _marshal_variant(variant, writer)
         case _:
@@ -317,4 +314,21 @@ def test_marshal_struct_header():
 
 @test
 def test_marshal_variant():
-    assert marshal(Variant(Int32(5))) == b"\x01\x69\x00\x00\x00\x00\x00\x05"
+    assert marshal(Variant("i", Int32(5))) == b"\x01\x69\x00\x00\x00\x00\x00\x05"
+
+@test
+def test_marshal_dict():
+    value = Dict({String("foo"): String("1"),
+                  String("bar"): String("2")})
+    marshalled = marshal(value)
+    foo_before_bar = (
+        b"\x00\x00\x00\x1e"
+        b"\x00\x00\x00\x00"
+        b"\x00\x00\x00\x03\x66\x6f\x6f\x00\x00\x00\x00\x01\x31\x00\x00\x00"
+        b"\x00\x00\x00\x03\x62\x61\x72\x00\x00\x00\x00\x01\x32\x00")
+    bar_before_foo = (
+        b"\x00\x00\x00\x1e"
+        b"\x00\x00\x00\x00"
+        b"\x00\x00\x00\x03\x62\x61\x72\x00\x00\x00\x00\x01\x32\x00\x00\x00"
+        b"\x00\x00\x00\x03\x66\x6f\x6f\x00\x00\x00\x00\x01\x31\x00")
+    assert marshalled in [foo_before_bar, bar_before_foo]

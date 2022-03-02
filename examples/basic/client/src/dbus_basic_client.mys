@@ -9,6 +9,8 @@ from dbus.types import String
 from dbus.types import Array
 from dbus.types import Struct
 from dbus.types import Byte
+from dbus.types import Variant
+from dbus.types import Dict
 from dbus.marshaling import marshal
 
 @trait
@@ -16,20 +18,6 @@ class BasicDemoInterface:
 
     def count(self, value: i64):
         pass
-
-# class BasicObjectHandler(Object):
-#     basic_demo: BasicDemoInterface
-#
-#     def on_message(self, data: Reader):
-#         match name:
-#             case "Random":
-#                 self.basic_demo.random()
-#             case "Echo":
-#                 output = self.basic_demo.basic(data.read_string())
-#             case "Cat":
-#                 output = self.basic_demo.cat(data.read_string())
-#             case "Sum":
-#                 output = self.basic_demo.cat(data.read_array_i32())
 
 class BasicDemo:
 
@@ -66,8 +54,8 @@ class BasicDemo:
 
         return result.to_string()
 
-    def echo(self, input: Type) -> Type:
-        return self.call("Echo", input, String("Variant"))
+    def echo(self, input: Variant) -> Variant:
+        return self.call("Echo", input, Variant("s", String("Variant")))
 
     def cat(self, path: string) -> bytes:
         result = self.call("Cat", String(path), Array([Byte(1), Byte(2)]))
@@ -86,7 +74,12 @@ class BasicDemo:
         return result.to_int32()
 
     def info(self) -> {string: string}:
-        raise NotImplementedError()
+        result = self.call("Info",
+                           None,
+                           Dict({String("A"): String("1"),
+                                 String("B"): String("2")}))
+
+        return {k.to_string(): v.to_string() for k, v in result.to_dict()}
 
     def exit(self) -> string:
         raise NotImplementedError()

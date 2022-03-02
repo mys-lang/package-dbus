@@ -41,16 +41,5 @@ class BasicObject(Object):
                  basic_demo: BasicDemoInterface):
         self.basic_demo = BasicDemo()
 
-#     def on_method_call(self, data: Reader):
-#         match name:
-#             case "Random":
-#                 self.basic_demo.random()
-#             case "Echo":
-#                 output = self.basic_demo.basic(data.read_variant())
-#             case "Cat":
-#                 output = self.basic_demo.cat(data.read_string())
-#             case "Sum":
-#                 output = self.basic_demo.sum(data.read_array_i32())
-
     def signal_count(self, value: i64):
         raise NotImplementedError()
