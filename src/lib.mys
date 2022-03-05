@@ -4,7 +4,11 @@ from .server import Object as ServerObject
 class Handler:
     pass
 
-class SessionBus:
+@trait
+class Bus:
+    pass
+
+class SessionBus(Bus):
     _handler: Handler
 
     def __init__(self, handler: Handler = None):
