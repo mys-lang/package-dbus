@@ -1,5 +1,17 @@
+from fiber import Fiber
+from fiber import current
+from fiber import suspend
+from fiber import resume
 from .client import Object as ClientObject
 from .server import Object as ServerObject
+from .types import Type
+from .types import Struct
+from .types import Array
+from .types import Byte
+from .types import Uint32
+from .types import ObjectPath
+from .types import String
+from .marshaling import marshal
 
 class Handler:
     pass
@@ -8,11 +20,20 @@ class Handler:
 class Bus:
     pass
 
+class Completion:
+    fiber: Fiber
+    header: Type
+    data: Type
+
 class SessionBus(Bus):
     _handler: Handler
+    _serial: u32
+    _completions: {u32: Completion}
 
     def __init__(self, handler: Handler = None):
         self._handler = handler
+        self._serial = 0
+        self._completions = {}
 
     def start(self):
         """Connect to the bus.
@@ -38,3 +59,54 @@ class SessionBus(Bus):
         """Add given server object.
 
         """
+
+    def call(self,
+             bus_name: string,
+             object_path: string,
+             interface: string,
+             method: string,
+             argument: Type) -> Type:
+        """Call given method on given object.
+
+        """
+
+        if argument is not None:
+            body = marshal(argument)
+        else:
+            body = b""
+
+        serial = self._next_serial()
+        header = Struct([
+            Byte(u8(i32('B'))),
+            Byte(1),
+            Byte(0),
+            Byte(1),
+            Uint32(u32(len(body))),
+            Uint32(serial),
+            Array([
+                Struct([Byte(1), ObjectPath(object_path)]),
+                Struct([Byte(2), String(interface)]),
+                Struct([Byte(6), String(bus_name)]),
+                Struct([Byte(3), String(method)])
+            ])
+        ])
+        message = marshal(header)
+        message += body
+
+        completion = Completion(current(), None, None)
+        self._completions[serial] = completion
+        self._write(message)
+        suspend()
+
+        return completion.data
+
+    def _next_serial(self) -> u32:
+        self._serial += 1
+
+        if self._serial == 0:
+            self._serial = 1
+
+        return self._serial
+
+    def _write(self, message: bytes):
+        pass

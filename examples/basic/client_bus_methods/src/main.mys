@@ -1,0 +1,11 @@
+from dbus import SessionBus
+from dbus.types import String
+
+def main():
+    bus = SessionBus()
+    bus.start()
+    print(bus.call("org.example.Basic",
+                   "/Basic1",
+                   "org.example.BasicDemo",
+                   "Hello",
+                   String("Hello!")))
