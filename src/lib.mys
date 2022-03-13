@@ -76,7 +76,7 @@ class SessionBus(Bus):
             body = b""
 
         serial = self._next_serial()
-        header = Struct([
+        header: [Type] = [
             Byte(u8(i32('B'))),
             Byte(1),
             Byte(0),
@@ -89,7 +89,7 @@ class SessionBus(Bus):
                 Struct([Byte(6), String(bus_name)]),
                 Struct([Byte(3), String(method)])
             ])
-        ])
+        ]
         message = marshal(header)
         message += body
 

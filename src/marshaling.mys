@@ -32,7 +32,7 @@ class SignatureReader:
 
     def available(self) -> bool:
         return self._pos < i64(len(self._signature))
-    
+
 class Reader:
     _data: bytes
     _pos: i64
@@ -318,13 +318,15 @@ def _unmarshal_variant(reader: Reader) -> Variant:
 def _unmarshal_dict(signature: SignatureReader, reader: Reader) -> Dict:
     return Dict({})
 
-def marshal(value: Type, big_endian: bool = True) -> bytes:
-    """Marshal given value .
+def marshal(values: [Type], big_endian: bool = True) -> bytes:
+    """Marshal given values.
 
     """
 
     writer = Writer()
-    _marshal(value, writer)
+
+    for value in values:
+        _marshal(value, writer)
 
     return writer.finalize()
 
@@ -367,36 +369,36 @@ def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
 
 def unmarshal(signature: string,
               data: bytes,
-              big_endian: bool = True) -> Type:
-    """Unmarshal given data.
+              big_endian: bool = True) -> [Type]:
+    """Unmarshal given data using given signature.
 
     """
 
     signature_reader = SignatureReader(signature)
     reader = Reader(data)
-    value = []
+    values = []
 
     while signature_reader.available():
-        value.append(_unmarshal(signature_reader, reader))
-    
-    return Struct(value)
+        values.append(_unmarshal(signature_reader, reader))
 
-def _unmarshal_unpack_struct(signature: string, data: bytes) -> Type:
-    match unmarshal(signature, data):
-        case Struct() as value:
-            assert len(value.value) == 1
-            
-            return value.value[0]
-        case _:
-            raise AssertionError()
+    return values
+
+def _marshal_pack_list(value: Type) -> bytes:
+    return marshal([value])
+
+def _unmarshal_unpack_list(signature: string, data: bytes) -> Type:
+    value = unmarshal(signature, data)
+    assert len(value) == 1
+
+    return value[0]
 
 @test
 def test_marshal_byte():
-    assert marshal(Byte(0x34)) == b"\x34"
-    
+    assert _marshal_pack_list(Byte(0x34)) == b"\x34"
+
 @test
 def test_unmarshal_byte():
-    match _unmarshal_unpack_struct("y", b"\x34"):
+    match _unmarshal_unpack_list("y", b"\x34"):
         case Byte() as value:
             assert value.value == 0x34
         case _:
@@ -404,18 +406,18 @@ def test_unmarshal_byte():
 
 @test
 def test_marshal_boolean():
-    assert marshal(Boolean(False)) == b"\x00\x00\x00\x00"
-    assert marshal(Boolean(True)) == b"\x00\x00\x00\x01"
+    assert _marshal_pack_list(Boolean(False)) == b"\x00\x00\x00\x00"
+    assert _marshal_pack_list(Boolean(True)) == b"\x00\x00\x00\x01"
 
 @test
 def test_unmarshal_boolean():
-    match _unmarshal_unpack_struct("b", b"\x00\x00\x00\x00"):
+    match _unmarshal_unpack_list("b", b"\x00\x00\x00\x00"):
         case Boolean() as value:
             assert not value.value
         case _:
             assert False
 
-    match _unmarshal_unpack_struct("b", b"\x00\x00\x00\x01"):
+    match _unmarshal_unpack_list("b", b"\x00\x00\x00\x01"):
         case Boolean() as value:
             assert value.value
         case _:
@@ -423,18 +425,18 @@ def test_unmarshal_boolean():
 
 @test
 def test_marshal_int16():
-    assert marshal(Int16(0x1234)) == b"\x12\x34"
-    assert marshal(Int16(-2)) == b"\xff\xfe"
+    assert _marshal_pack_list(Int16(0x1234)) == b"\x12\x34"
+    assert _marshal_pack_list(Int16(-2)) == b"\xff\xfe"
 
 @test
 def test_unmarshal_int16():
-    match _unmarshal_unpack_struct("n", b"\x12\x34"):
+    match _unmarshal_unpack_list("n", b"\x12\x34"):
         case Int16() as value:
             assert value.value == 0x1234
         case _:
             assert False
 
-    match _unmarshal_unpack_struct("n", b"\xff\xfe"):
+    match _unmarshal_unpack_list("n", b"\xff\xfe"):
         case Int16() as value:
             assert value.value == -2
         case _:
@@ -442,11 +444,11 @@ def test_unmarshal_int16():
 
 @test
 def test_marshal_uint16():
-    assert marshal(Uint16(0x1234)) == b"\x12\x34"
+    assert _marshal_pack_list(Uint16(0x1234)) == b"\x12\x34"
 
 @test
 def test_unmarshal_uint16():
-    match _unmarshal_unpack_struct("q", b"\x12\x34"):
+    match _unmarshal_unpack_list("q", b"\x12\x34"):
         case Uint16() as value:
             assert value.value == 0x1234
         case _:
@@ -454,18 +456,18 @@ def test_unmarshal_uint16():
 
 @test
 def test_marshal_int32():
-    assert marshal(Int32(0x12345678)) == b"\x12\x34\x56\x78"
-    assert marshal(Int32(-2)) == b"\xff\xff\xff\xfe"
+    assert _marshal_pack_list(Int32(0x12345678)) == b"\x12\x34\x56\x78"
+    assert _marshal_pack_list(Int32(-2)) == b"\xff\xff\xff\xfe"
 
 @test
 def test_unmarshal_int32():
-    match _unmarshal_unpack_struct("i", b"\x12\x34\x56\x78"):
+    match _unmarshal_unpack_list("i", b"\x12\x34\x56\x78"):
         case Int32() as value:
             assert value.value == 0x12345678
         case _:
             assert False
 
-    match _unmarshal_unpack_struct("i", b"\xff\xff\xff\xfe"):
+    match _unmarshal_unpack_list("i", b"\xff\xff\xff\xfe"):
         case Int32() as value:
             assert value.value == -2
         case _:
@@ -473,11 +475,11 @@ def test_unmarshal_int32():
 
 @test
 def test_marshal_uint32():
-    assert marshal(Uint32(0x12345678)) == b"\x12\x34\x56\x78"
+    assert _marshal_pack_list(Uint32(0x12345678)) == b"\x12\x34\x56\x78"
 
 @test
 def test_unmarshal_uint32():
-    match _unmarshal_unpack_struct("u", b"\x12\x34\x56\x78"):
+    match _unmarshal_unpack_list("u", b"\x12\x34\x56\x78"):
         case Uint32() as value:
             assert value.value == 0x12345678
         case _:
@@ -485,18 +487,18 @@ def test_unmarshal_uint32():
 
 @test
 def test_marshal_int64():
-    assert marshal(Int64(0x12345678abcdef)) == b"\x00\x12\x34\x56\x78\xab\xcd\xef"
-    assert marshal(Int64(-2)) == b"\xff\xff\xff\xff\xff\xff\xff\xfe"
+    assert _marshal_pack_list(Int64(0x12345678abcdef)) == b"\x00\x12\x34\x56\x78\xab\xcd\xef"
+    assert _marshal_pack_list(Int64(-2)) == b"\xff\xff\xff\xff\xff\xff\xff\xfe"
 
 @test
 def test_unmarshal_int64():
-    match _unmarshal_unpack_struct("x", b"\x00\x12\x34\x56\x78\xab\xcd\xef"):
+    match _unmarshal_unpack_list("x", b"\x00\x12\x34\x56\x78\xab\xcd\xef"):
         case Int64() as value:
             assert value.value == 0x12345678abcdef
         case _:
             assert False
 
-    match _unmarshal_unpack_struct("x", b"\xff\xff\xff\xff\xff\xff\xff\xfe"):
+    match _unmarshal_unpack_list("x", b"\xff\xff\xff\xff\xff\xff\xff\xfe"):
         case Int64() as value:
             assert value.value == -2
         case _:
@@ -504,11 +506,11 @@ def test_unmarshal_int64():
 
 @test
 def test_marshal_uint64():
-    assert marshal(Uint64(0x12345678abcdef)) == b"\x00\x12\x34\x56\x78\xab\xcd\xef"
+    assert _marshal_pack_list(Uint64(0x12345678abcdef)) == b"\x00\x12\x34\x56\x78\xab\xcd\xef"
 
 @test
 def test_unmarshal_uint64():
-    match _unmarshal_unpack_struct("t", b"\x00\x12\x34\x56\x78\xab\xcd\xef"):
+    match _unmarshal_unpack_list("t", b"\x00\x12\x34\x56\x78\xab\xcd\xef"):
         case Uint64() as value:
             assert value.value == 0x12345678abcdef
         case _:
@@ -516,25 +518,25 @@ def test_unmarshal_uint64():
 
 @test
 def test_marshal_double():
-    assert marshal(Double(0.0)) == b"\x00\x00\x00\x00\x00\x00\x00\x00"
-    assert marshal(Double(1.0)) == b"\x3f\xf0\x00\x00\x00\x00\x00\x00"
-    assert marshal(Double(125.6)) == b"\x40\x5f\x66\x66\x66\x66\x66\x66"
+    assert _marshal_pack_list(Double(0.0)) == b"\x00\x00\x00\x00\x00\x00\x00\x00"
+    assert _marshal_pack_list(Double(1.0)) == b"\x3f\xf0\x00\x00\x00\x00\x00\x00"
+    assert _marshal_pack_list(Double(125.6)) == b"\x40\x5f\x66\x66\x66\x66\x66\x66"
 
 @test
 def test_unmarshal_double():
-    match _unmarshal_unpack_struct("d", b"\x00\x00\x00\x00\x00\x00\x00\x00"):
+    match _unmarshal_unpack_list("d", b"\x00\x00\x00\x00\x00\x00\x00\x00"):
         case Double() as value:
             assert value.value == 0.0
         case _:
             assert False
 
-    match _unmarshal_unpack_struct("d", b"\x3f\xf0\x00\x00\x00\x00\x00\x00"):
+    match _unmarshal_unpack_list("d", b"\x3f\xf0\x00\x00\x00\x00\x00\x00"):
         case Double() as value:
             assert value.value == 1.0
         case _:
             assert False
 
-    match _unmarshal_unpack_struct("d", b"\x40\x5f\x66\x66\x66\x66\x66\x66"):
+    match _unmarshal_unpack_list("d", b"\x40\x5f\x66\x66\x66\x66\x66\x66"):
         case Double() as value:
             assert value.value == 125.6
         case _:
@@ -542,18 +544,18 @@ def test_unmarshal_double():
 
 @test
 def test_marshal_string():
-    assert marshal(String("")) == b"\x00\x00\x00\x00\x00"
-    assert marshal(String("foo")) == b"\x00\x00\x00\x03\x66\x6f\x6f\x00"
+    assert _marshal_pack_list(String("")) == b"\x00\x00\x00\x00\x00"
+    assert _marshal_pack_list(String("foo")) == b"\x00\x00\x00\x03\x66\x6f\x6f\x00"
 
 @test
 def test_unmarshal_string():
-    match _unmarshal_unpack_struct("s", b"\x00\x00\x00\x00\x00"):
+    match _unmarshal_unpack_list("s", b"\x00\x00\x00\x00\x00"):
         case String() as value:
             assert value.value == ""
         case _:
             assert False
 
-    match _unmarshal_unpack_struct("s", b"\x00\x00\x00\x03\x66\x6f\x6f\x00"):
+    match _unmarshal_unpack_list("s", b"\x00\x00\x00\x03\x66\x6f\x6f\x00"):
         case String() as value:
             assert value.value == "foo"
         case _:
@@ -561,12 +563,12 @@ def test_unmarshal_string():
 
 @test
 def test_marshal_object_path():
-    assert marshal(ObjectPath("/Example")) == (
+    assert _marshal_pack_list(ObjectPath("/Example")) == (
         b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00")
 
 @test
 def test_unmarshal_object_path():
-    match _unmarshal_unpack_struct(
+    match _unmarshal_unpack_list(
         "o",
         b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00"):
         case ObjectPath() as value:
@@ -576,11 +578,11 @@ def test_unmarshal_object_path():
 
 @test
 def test_marshal_signature():
-    assert marshal(Signature("usi")) == b"\x03\x75\x73\x69\x00"
+    assert _marshal_pack_list(Signature("usi")) == b"\x03\x75\x73\x69\x00"
 
 @test
 def test_unmarshal_signature():
-    match _unmarshal_unpack_struct("g", b"\x03\x75\x73\x69\x00"):
+    match _unmarshal_unpack_list("g", b"\x03\x75\x73\x69\x00"):
         case Signature() as value:
             assert value.value == "usi"
         case _:
@@ -588,11 +590,11 @@ def test_unmarshal_signature():
 
 @test
 def test_marshal_array_int64():
-    assert marshal(Array([Int64(5)])) == (
+    assert _marshal_pack_list(Array([Int64(5)])) == (
         b"\x00\x00\x00\x08"
         b"\x00\x00\x00\x00"
         b"\x00\x00\x00\x00\x00\x00\x00\x05")
-    assert marshal(Array([Int64(5), Int64(7)])) == (
+    assert _marshal_pack_list(Array([Int64(5), Int64(7)])) == (
         b"\x00\x00\x00\x10"
         b"\x00\x00\x00\x00"
         b"\x00\x00\x00\x00\x00\x00\x00\x05"
@@ -600,7 +602,7 @@ def test_marshal_array_int64():
 
 @test
 def test_marshal_array_int32():
-    assert marshal(Array([Int32(5), Int32(7)])) == (
+    assert _marshal_pack_list(Array([Int32(5), Int32(7)])) == (
         b"\x00\x00\x00\x08"
         b"\x00\x00\x00\x05"
         b"\x00\x00\x00\x07")
@@ -616,18 +618,18 @@ def test_marshal_struct_header():
         Uint32(3),
         Array([])
     ])
-    assert marshal(header) == (
+    assert _marshal_pack_list(header) == (
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
 @test
 def test_marshal_variant():
-    assert marshal(Variant("i", Int32(5))) == b"\x01\x69\x00\x00\x00\x00\x00\x05"
+    assert _marshal_pack_list(Variant("i", Int32(5))) == b"\x01\x69\x00\x00\x00\x00\x00\x05"
 
 @test
 def test_marshal_dict():
     value = Dict({String("foo"): String("1"),
                   String("bar"): String("2")})
-    marshalled = marshal(value)
+    marshalled = _marshal_pack_list(value)
     foo_before_bar = (
         b"\x00\x00\x00\x1e"
         b"\x00\x00\x00\x00"
