@@ -16,6 +16,40 @@ from .types import Struct
 from .types import Dict
 from .types import Variant
 
+def marshal(values: [Type], big_endian: bool = True) -> bytes:
+    """Marshal given values.
+
+    """
+
+    if not big_endian:
+        raise NotImplementedError()
+
+    writer = Writer()
+
+    for value in values:
+        _marshal(value, writer)
+
+    return writer.finalize()
+
+def unmarshal(signature: string,
+              data: bytes,
+              big_endian: bool = True) -> [Type]:
+    """Unmarshal given data using given signature.
+
+    """
+
+    if not big_endian:
+        raise NotImplementedError()
+
+    signature_reader = SignatureReader(signature)
+    reader = Reader(data)
+    values = []
+
+    while signature_reader.available():
+        values.append(_unmarshal(signature_reader, reader))
+
+    return values
+
 class SignatureReader:
     _signature: string
     _pos: i64
@@ -318,18 +352,6 @@ def _unmarshal_variant(reader: Reader) -> Variant:
 def _unmarshal_dict(signature: SignatureReader, reader: Reader) -> Dict:
     return Dict({})
 
-def marshal(values: [Type], big_endian: bool = True) -> bytes:
-    """Marshal given values.
-
-    """
-
-    writer = Writer()
-
-    for value in values:
-        _marshal(value, writer)
-
-    return writer.finalize()
-
 def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
     match signature_reader.get():
         case 'y':
@@ -366,22 +388,6 @@ def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
             return _unmarshal_dict(signature_reader, reader)
         case _:
             raise NotImplementedError()
-
-def unmarshal(signature: string,
-              data: bytes,
-              big_endian: bool = True) -> [Type]:
-    """Unmarshal given data using given signature.
-
-    """
-
-    signature_reader = SignatureReader(signature)
-    reader = Reader(data)
-    values = []
-
-    while signature_reader.available():
-        values.append(_unmarshal(signature_reader, reader))
-
-    return values
 
 def _marshal_pack_list(value: Type) -> bytes:
     return marshal([value])
@@ -619,6 +625,20 @@ def test_marshal_struct_header():
         Array([])
     ])
     assert _marshal_pack_list(header) == (
+        b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
+
+@test
+def test_marshal_header():
+    header: [Type] = [
+        Byte(u8(i32('B'))),
+        Byte(1),
+        Byte(0),
+        Byte(1),
+        Uint32(0),
+        Uint32(3),
+        Array([])
+    ]
+    assert marshal(header) == (
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
 @test
