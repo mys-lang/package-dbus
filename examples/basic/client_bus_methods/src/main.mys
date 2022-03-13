@@ -1,11 +1,27 @@
 from dbus import SessionBus
+from dbus import SignalHandler
 from dbus.types import String
+
+
+class Handler(SignalHandler):
+
+    def on_signal(self,
+                  sender: string,
+                  object_path: string,
+                  interface: string,
+                  signal: string,
+                  body: Type):
+        print("Signal:", sender, object_path, interface, signal, body)
+
 
 def main():
     bus = SessionBus()
+    bus.add_signal_handler(Handler())
     bus.start()
     print(bus.call("org.example.Basic",
                    "/Basic1",
                    "org.example.BasicDemo",
                    "Hello",
                    String("Hello!")))
+    bus.emit("/Basic1", "org.example.BasicDemo", "Alive")
+    bus.join()
