@@ -22,7 +22,7 @@ class BasicDemoInterface:
 class BasicDemo:
 
     def call(self, method: string, argument: Type, returns: Type) -> Type:
-        header = Struct([
+        header: [Type] = [
             Byte(u8(i32('B'))),
             Byte(1),
             Byte(0),
@@ -30,7 +30,7 @@ class BasicDemo:
             Uint32(0),
             Uint32(3),
             Array([])
-        ])
+        ]
         print("Method:")
         print(" ", method)
         print("  Header:")
