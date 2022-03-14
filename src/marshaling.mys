@@ -64,8 +64,62 @@ class SignatureReader:
 
         return value
 
+    def peek(self) -> char:
+        return self._signature[self._pos]
+
     def available(self) -> bool:
         return self._pos < i64(len(self._signature))
+
+    def tell(self) -> i64:
+        return self._pos
+
+    def seek(self, pos: i64):
+        self._pos = pos
+
+    def skip_single_complete_type(self):
+        self._skip_single_complete_type()
+
+    def _skip_single_complete_type(self):
+        match self.get():
+            case 'y':
+                pass
+            case 'b':
+                pass
+            case 'n':
+                pass
+            case 'q':
+                pass
+            case 'i':
+                pass
+            case 'u':
+                pass
+            case 'x':
+                pass
+            case 't':
+                pass
+            case 'd':
+                pass
+            case 's':
+                pass
+            case 'o':
+                pass
+            case 'g':
+                pass
+            case 'a':
+                self._skip_single_complete_type()
+            case '(':
+                while self.peek() != ')':
+                    self._skip_single_complete_type()
+
+                self.get()
+            case 'v':
+                pass
+            case '{':
+                self._skip_single_complete_type()
+                self._skip_single_complete_type()
+                self.get()
+            case _:
+                raise NotImplementedError()
 
 class Reader:
     _data: bytes
@@ -152,6 +206,9 @@ class Reader:
         if rest > 0:
             for _ in range(alignment - rest):
                 self.read_u8()
+
+    def tell(self) -> i64:
+        return self._pos
 
 class Writer:
     _data: bytes
@@ -340,16 +397,26 @@ def _marshal(value: Type, writer: Writer):
         case _:
             raise NotImplementedError()
 
-def _unmarshal_array(signature: SignatureReader, reader: Reader) -> Array:
-    return Array([])
+def _unmarshal_array(signature_reader: SignatureReader, reader: Reader) -> Array:
+    item_pos = signature_reader.tell()
+    end = i64(reader.read_u32()) + reader.tell()
+    values: [Type] = []
 
-def _unmarshal_struct(signature: SignatureReader, reader: Reader) -> Struct:
+    while reader.tell() < end:
+        values.append(_unmarshal(signature_reader, reader))
+        signature_reader.seek(item_pos)
+
+    signature_reader.skip_single_complete_type()
+
+    return Array(values)
+
+def _unmarshal_struct(signature_reader: SignatureReader, reader: Reader) -> Struct:
     return Struct([])
 
 def _unmarshal_variant(reader: Reader) -> Variant:
     return Variant("", None)
 
-def _unmarshal_dict(signature: SignatureReader, reader: Reader) -> Dict:
+def _unmarshal_dict(signature_reader: SignatureReader, reader: Reader) -> Dict:
     return Dict({})
 
 def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
@@ -607,11 +674,71 @@ def test_marshal_array_int64():
         b"\x00\x00\x00\x00\x00\x00\x00\x07")
 
 @test
+def test_unmarshal_array_int64():
+    match _unmarshal_unpack_list("ax",
+                                 b"\x00\x00\x00\x08"
+                                 b"\x00\x00\x00\x00"
+                                 b"\x00\x00\x00\x00\x00\x00\x00\x05"):
+        case Array() as value:
+            match value.value[0]:
+                case Int64() as int64:
+                    assert int64.value == 5
+                case _:
+                    assert False
+        case _:
+            assert False
+
+    match _unmarshal_unpack_list("ax",
+                                 b"\x00\x00\x00\x10"
+                                 b"\x00\x00\x00\x00"
+                                 b"\x00\x00\x00\x00\x00\x00\x00\x05"
+                                 b"\x00\x00\x00\x00\x00\x00\x00\x07"):
+        case Array() as value:
+            assert len(value.value) == 2
+
+            match value.value[0]:
+                case Int64() as int64:
+                    assert int64.value == 5
+                case _:
+                    assert False
+
+            match value.value[1]:
+                case Int64() as int64:
+                    assert int64.value == 7
+                case _:
+                    assert False
+        case _:
+            assert False
+
+@test
 def test_marshal_array_int32():
     assert _marshal_pack_list(Array([Int32(5), Int32(7)])) == (
         b"\x00\x00\x00\x08"
         b"\x00\x00\x00\x05"
         b"\x00\x00\x00\x07")
+
+@test
+def test_unmarshal_array_int32():
+    match _unmarshal_unpack_list("ai",
+                                 b"\x00\x00\x00\x08"
+                                 b"\x00\x00\x00\x05"
+                                 b"\x00\x00\x00\x07"):
+        case Array() as value:
+            assert len(value.value) == 2
+
+            match value.value[0]:
+                case Int32() as int32:
+                    assert int32.value == 5
+                case _:
+                    assert False
+
+            match value.value[1]:
+                case Int32() as int32:
+                    assert int32.value == 7
+                case _:
+                    assert False
+        case _:
+            assert False
 
 @test
 def test_marshal_struct_header():
@@ -640,6 +767,54 @@ def test_marshal_header():
     ]
     assert marshal(header) == (
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
+
+@test
+def test_unmarshal_header():
+    values = unmarshal(
+        "yyyyuua(yv)",
+        b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
+
+    match values[0]:
+        case Byte() as value:
+            assert value.value == u8(i32('B'))
+        case _:
+            assert False
+
+    match values[1]:
+        case Byte() as value:
+            assert value.value == 1
+        case _:
+            assert False
+
+    match values[2]:
+        case Byte() as value:
+            assert value.value == 0
+        case _:
+            assert False
+
+    match values[3]:
+        case Byte() as value:
+            assert value.value == 1
+        case _:
+            assert False
+
+    match values[4]:
+        case Uint32() as value:
+            assert value.value == 0
+        case _:
+            assert False
+
+    match values[5]:
+        case Uint32() as value:
+            assert value.value == 3
+        case _:
+            assert False
+
+    match values[6]:
+        case Array() as value:
+            assert len(value.value) == 0
+        case _:
+            assert False
 
 @test
 def test_marshal_variant():
