@@ -21,10 +21,7 @@ def marshal(values: [Type], big_endian: bool = True) -> bytes:
 
     """
 
-    if not big_endian:
-        raise NotImplementedError("Little endian is not yet supported.")
-
-    writer = Writer()
+    writer = Writer(big_endian)
 
     for value in values:
         _marshal(value, writer)
@@ -38,11 +35,8 @@ def unmarshal(signature: string,
 
     """
 
-    if not big_endian:
-        raise NotImplementedError("Little endian is not yet supported.")
-
     signature_reader = SignatureReader(signature)
-    reader = Reader(data)
+    reader = Reader(data, big_endian)
     values = []
 
     while signature_reader.available():
@@ -127,10 +121,12 @@ class SignatureReader:
 class Reader:
     _data: bytes
     _pos: i64
+    _big_endian: bool
 
-    def __init__(self, data: bytes):
+    def __init__(self, data: bytes, big_endian: bool):
         self._data = data
         self._pos = 0
+        self._big_endian = big_endian
 
     def read_u8(self) -> u8:
         value = self._data[self._pos]
@@ -144,9 +140,13 @@ class Reader:
     def read_u16(self) -> u16:
         self.align(2)
 
-        value = u16(self.read_u8())
-        value <<= 8
-        value |= u16(self.read_u8())
+        if self._big_endian:
+            value = u16(self.read_u8())
+            value <<= 8
+            value |= u16(self.read_u8())
+        else:
+            value = u16(self.read_u8())
+            value |= u16(self.read_u8()) << 8
 
         return value
 
@@ -156,9 +156,13 @@ class Reader:
     def read_u32(self) -> u32:
         self.align(4)
 
-        value = u32(self.read_u16())
-        value <<= 16
-        value |= u32(self.read_u16())
+        if self._big_endian:
+            value = u32(self.read_u16())
+            value <<= 16
+            value |= u32(self.read_u16())
+        else:
+            value = u32(self.read_u16())
+            value |= u32(self.read_u16()) << 16
 
         return value
 
@@ -168,9 +172,13 @@ class Reader:
     def read_u64(self) -> u64:
         self.align(8)
 
-        value = u64(self.read_u32())
-        value <<= 32
-        value |= u64(self.read_u32())
+        if self._big_endian:
+            value = u64(self.read_u32())
+            value <<= 32
+            value |= u64(self.read_u32())
+        else:
+            value = u64(self.read_u32())
+            value |= u64(self.read_u32()) << 32
 
         return value
 
@@ -216,10 +224,12 @@ class Reader:
 class Writer:
     _data: bytes
     _pos: i64
+    _big_endian: bool
 
-    def __init__(self):
+    def __init__(self, big_endian: bool):
         self._data = b""
         self._pos = 0
+        self._big_endian = big_endian
 
     def write_u8(self, value: u8):
         self._data += value
@@ -230,38 +240,67 @@ class Writer:
 
     def write_u16(self, value: u16):
         self.align(2)
-        self.write_u8(u8(value >> 8))
-        self.write_u8(u8(value >> 0))
+
+        if self._big_endian:
+            self.write_u8(u8(value >> 8))
+            self.write_u8(u8(value >> 0))
+        else:
+            self.write_u8(u8(value >> 0))
+            self.write_u8(u8(value >> 8))
 
     def write_i32(self, value: i32):
         self.write_u32(u32(value))
 
     def write_u32(self, value: u32):
         self.align(4)
-        self.write_u8(u8(value >> 24))
-        self.write_u8(u8(value >> 16))
-        self.write_u8(u8(value >> 8))
-        self.write_u8(u8(value >> 0))
+
+        if self._big_endian:
+            self.write_u8(u8(value >> 24))
+            self.write_u8(u8(value >> 16))
+            self.write_u8(u8(value >> 8))
+            self.write_u8(u8(value >> 0))
+        else:
+            self.write_u8(u8(value >> 0))
+            self.write_u8(u8(value >> 8))
+            self.write_u8(u8(value >> 16))
+            self.write_u8(u8(value >> 24))
 
     def write_u32_at(self, pos: i64, value: u32):
-        self._data[pos] = u8(value >> 24)
-        self._data[pos + 1] = u8(value >> 16)
-        self._data[pos + 2] = u8(value >> 8)
-        self._data[pos + 3] = u8(value >> 0)
+        if self._big_endian:
+            self._data[pos] = u8(value >> 24)
+            self._data[pos + 1] = u8(value >> 16)
+            self._data[pos + 2] = u8(value >> 8)
+            self._data[pos + 3] = u8(value >> 0)
+        else:
+            self._data[pos] = u8(value >> 0)
+            self._data[pos + 1] = u8(value >> 8)
+            self._data[pos + 2] = u8(value >> 16)
+            self._data[pos + 3] = u8(value >> 24)
 
     def write_i64(self, value: i64):
         self.write_u64(u64(value))
 
     def write_u64(self, value: u64):
         self.align(8)
-        self.write_u8(u8(value >> 56))
-        self.write_u8(u8(value >> 48))
-        self.write_u8(u8(value >> 40))
-        self.write_u8(u8(value >> 32))
-        self.write_u8(u8(value >> 24))
-        self.write_u8(u8(value >> 16))
-        self.write_u8(u8(value >> 8))
-        self.write_u8(u8(value >> 0))
+
+        if self._big_endian:
+            self.write_u8(u8(value >> 56))
+            self.write_u8(u8(value >> 48))
+            self.write_u8(u8(value >> 40))
+            self.write_u8(u8(value >> 32))
+            self.write_u8(u8(value >> 24))
+            self.write_u8(u8(value >> 16))
+            self.write_u8(u8(value >> 8))
+            self.write_u8(u8(value >> 0))
+        else:
+            self.write_u8(u8(value >> 0))
+            self.write_u8(u8(value >> 8))
+            self.write_u8(u8(value >> 16))
+            self.write_u8(u8(value >> 24))
+            self.write_u8(u8(value >> 32))
+            self.write_u8(u8(value >> 40))
+            self.write_u8(u8(value >> 48))
+            self.write_u8(u8(value >> 56))
 
     def write_f64(self, value: f64):
         value_u64: u64 = 0
@@ -486,11 +525,13 @@ def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
         case _ as ch:
             raise MarshalingError(f"Unexpectd signature character '{ch}'.")
 
-def _marshal_pack_list(value: Type) -> bytes:
-    return marshal([value])
+def _marshal_pack_list(value: Type, big_endian: bool = True) -> bytes:
+    return marshal([value], big_endian)
 
-def _unmarshal_unpack_list(signature: string, data: bytes) -> Type:
-    value = unmarshal(signature, data)
+def _unmarshal_unpack_list(signature: string,
+                           data: bytes,
+                           big_endian: bool = True) -> Type:
+    value = unmarshal(signature, data, big_endian)
     assert len(value) == 1
 
     return value[0]
@@ -526,10 +567,12 @@ def test_unmarshal_int16():
 @test
 def test_marshal_uint16():
     assert _marshal_pack_list(Uint16(0x1234)) == b"\x12\x34"
+    assert _marshal_pack_list(Uint16(0x1234), False) == b"\x34\x12"
 
 @test
 def test_unmarshal_uint16():
     assert _unmarshal_unpack_list("q", b"\x12\x34").to_uint16() == 0x1234
+    assert _unmarshal_unpack_list("q", b"\x34\x12", False).to_uint16() == 0x1234
 
 @test
 def test_marshal_int32():
@@ -544,6 +587,7 @@ def test_unmarshal_int32():
 @test
 def test_marshal_uint32():
     assert _marshal_pack_list(Uint32(0x12345678)) == b"\x12\x34\x56\x78"
+    assert _marshal_pack_list(Uint32(0x12345678), False) == b"\x78\x56\x34\x12"
 
 @test
 def test_unmarshal_uint32():
@@ -568,12 +612,18 @@ def test_unmarshal_int64():
 def test_marshal_uint64():
     assert _marshal_pack_list(Uint64(0x12345678abcdef)) == (
         b"\x00\x12\x34\x56\x78\xab\xcd\xef")
+    assert _marshal_pack_list(Uint64(0x12345678abcdef), False) == (
+        b"\xef\xcd\xab\x78\x56\x34\x12\x00")
 
 @test
 def test_unmarshal_uint64():
     assert _unmarshal_unpack_list(
         "t",
         b"\x00\x12\x34\x56\x78\xab\xcd\xef").to_uint64() == 0x12345678abcdef
+    assert _unmarshal_unpack_list(
+        "t",
+        b"\xef\xcd\xab\x78\x56\x34\x12\x00",
+        False).to_uint64() == 0x12345678abcdef
 
 @test
 def test_marshal_double():
