@@ -432,7 +432,22 @@ def _unmarshal_variant(reader: Reader) -> Variant:
     return Variant(signature, value)
 
 def _unmarshal_dict(signature_reader: SignatureReader, reader: Reader) -> Dict:
-    return Dict({})
+    item_pos = signature_reader.tell()
+    end = i64(reader.read_u32()) + reader.tell()
+    values: {Type: Type} = {}
+
+    while reader.tell() < end:
+        reader.align(8)
+        key = _unmarshal(signature_reader, reader)
+        value = _unmarshal(signature_reader, reader)
+        values[key] = value
+        signature_reader.seek(item_pos)
+
+    signature_reader.skip_single_complete_type()
+    signature_reader.skip_single_complete_type()
+    signature_reader.get()
+
+    return Dict(values)
 
 def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
     match signature_reader.get():
@@ -748,6 +763,23 @@ def test_marshal_dict():
     assert marshalled in [foo_before_bar, bar_before_foo]
 
 @test
+def test_unmarshal_dict():
+    items = _unmarshal_unpack_list(
+        "{ss}",
+        b"\x00\x00\x00\x1e"
+        b"\x00\x00\x00\x00"
+        b"\x00\x00\x00\x03\x66\x6f\x6f\x00\x00\x00\x00\x01\x31\x00\x00\x00"
+        b"\x00\x00\x00\x03\x62\x61\x72\x00\x00\x00\x00\x01\x32\x00").to_dict()
+
+    for key, value in items:
+        if key.to_string() == "foo":
+            assert value.to_string() == "1"
+        elif key.to_string() == "bar":
+            assert value.to_string() == "2"
+        else:
+            raise AssertionError()
+
+@test
 def test_marshal_name_acquire():
     # Header.
     marshalled = marshal([
@@ -796,7 +828,6 @@ def test_marshal_name_acquire():
 
     # Body.
     marshalled = marshal([String(":1.572")])
-
     assert marshalled == b"\x00\x00\x00\x06:1.572\x00"
 
 @test
