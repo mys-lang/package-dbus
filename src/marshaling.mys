@@ -352,6 +352,8 @@ def _marshal_array(value: Array, writer: Writer):
         writer.write_u32_at(size_pos, u32(data_size))
 
 def _marshal_struct(value: Struct, writer: Writer):
+    writer.align(8)
+
     for item in value.to_struct():
         _marshal(item, writer)
 
@@ -413,6 +415,7 @@ def _unmarshal_array(signature_reader: SignatureReader, reader: Reader) -> Array
     return Array(values)
 
 def _unmarshal_struct(signature_reader: SignatureReader, reader: Reader) -> Struct:
+    reader.align(8)
     values = []
 
     while signature_reader.peek() != ')':
@@ -743,3 +746,132 @@ def test_marshal_dict():
         b"\x00\x00\x00\x03\x62\x61\x72\x00\x00\x00\x00\x01\x32\x00\x00\x00"
         b"\x00\x00\x00\x03\x66\x6f\x6f\x00\x00\x00\x00\x01\x31\x00")
     assert marshalled in [foo_before_bar, bar_before_foo]
+
+@test
+def test_marshal_name_acquire():
+    # Header.
+    marshalled = marshal([
+        Byte(0x4b),
+        Byte(4),
+        Byte(1),
+        Byte(1),
+        Uint32(0xb),
+        Uint32(2),
+        Array([
+            Struct([
+                Byte(1), Variant("o", ObjectPath("/org/freedesktop/DBus"))
+            ]),
+            Struct([
+                Byte(2), Variant("s", String("org.freedesktop.DBus")),
+            ]),
+            Struct([
+                Byte(3), Variant("s", String("NameAcquired")),
+            ]),
+            Struct([
+                Byte(6), Variant("s", String(":1.572")),
+            ]),
+            Struct([
+                Byte(8), Variant("g", Signature("s")),
+            ]),
+            Struct([
+                Byte(7), Variant("s", String("org.freedesktop.DBus"))
+            ]),
+        ])
+    ])
+
+    assert marshalled == (
+        b"\x4b\x04\x01\x01" b"\x00\x00\x00\x0b" b"\x00\x00\x00\x02"
+        b"\x00\x00\x00\x8d"
+        b"\x01" b"\x01\x6f\x00"
+        b"\x00\x00\x00\x15/org/freedesktop/DBus\x00\x00\x00"
+        b"\x02" b"\x01\x73\x00"
+        b"\x00\x00\x00\x14org.freedesktop.DBus\x00\x00\x00\x00"
+        b"\x03" b"\x01\x73\x00"
+        b"\x00\x00\x00\x0cNameAcquired\x00\x00\x00\x00"
+        b"\x06" b"\x01\x73\x00"
+        b"\x00\x00\x00\x06:1.572\x00\x00"
+        b"\x08" b"\x01\x67\x00" b"\x01s\x00\x00"
+        b"\x07" b"\x01\x73\x00"
+        b"\x00\x00\x00\x14org.freedesktop.DBus\x00")
+
+    # Body.
+    marshalled = marshal([String(":1.572")])
+
+    assert marshalled == b"\x00\x00\x00\x06:1.572\x00"
+
+@test
+def test_unmarshal_name_acquire():
+    # Header.
+    values = unmarshal("yyyyuua(yv)",
+                       b"\x4b\x04\x01\x01" b"\x00\x00\x00\x0b" b"\x00\x00\x00\x02"
+                       b"\x00\x00\x00\x8d"
+                       b"\x01" b"\x01\x6f\x00"
+                       b"\x00\x00\x00\x15/org/freedesktop/DBus\x00\x00\x00"
+                       b"\x02" b"\x01\x73\x00"
+                       b"\x00\x00\x00\x14org.freedesktop.DBus\x00\x00\x00\x00"
+                       b"\x03" b"\x01\x73\x00"
+                       b"\x00\x00\x00\x0cNameAcquired\x00\x00\x00\x00"
+                       b"\x06" b"\x01\x73\x00"
+                       b"\x00\x00\x00\x06:1.572\x00\x00"
+                       b"\x08" b"\x01\x67\x00" b"\x01s\x00\x00"
+                       b"\x07" b"\x01\x73\x00"
+                       b"\x00\x00\x00\x14org.freedesktop.DBus\x00\x00\x00\x00")
+
+    assert len(values) == 7
+    assert values[0].to_byte() == 0x4b
+    assert values[1].to_byte() == 4
+    assert values[2].to_byte() == 1
+    assert values[3].to_byte() == 1
+    assert values[4].to_uint32() == 0xb
+    assert values[5].to_uint32() == 2
+
+    values = values[6].to_array()
+    assert len(values) == 6
+
+    items = values[0].to_struct()
+    assert len(items) == 2
+    assert items[0].to_byte() == 1
+    signature, value = items[1].to_variant()
+    assert signature == "o"
+    assert value.to_object_path() == "/org/freedesktop/DBus"
+
+    items = values[1].to_struct()
+    assert len(items) == 2
+    assert items[0].to_byte() == 2
+    signature, value = items[1].to_variant()
+    assert signature == "s"
+    assert value.to_string() == "org.freedesktop.DBus"
+
+    items = values[2].to_struct()
+    assert len(items) == 2
+    assert items[0].to_byte() == 3
+    signature, value = items[1].to_variant()
+    assert signature == "s"
+    assert value.to_string() == "NameAcquired"
+
+    items = values[3].to_struct()
+    assert len(items) == 2
+    assert items[0].to_byte() == 6
+    signature, value = items[1].to_variant()
+    assert signature == "s"
+    assert value.to_string() == ":1.572"
+
+    items = values[4].to_struct()
+    assert len(items) == 2
+    assert items[0].to_byte() == 8
+    signature, value = items[1].to_variant()
+    assert signature == "g"
+    assert value.to_signature() == "s"
+
+    items = values[5].to_struct()
+    assert len(items) == 2
+    assert items[0].to_byte() == 7
+    signature, value = items[1].to_variant()
+    assert signature == "s"
+    assert value.to_string() == "org.freedesktop.DBus"
+
+    # Body.
+    values = unmarshal("s", b"\x00\x00\x00\x06:1.572\x00")
+
+    assert len(values) == 1
+    assert values[0].to_string() == ":1.572"
