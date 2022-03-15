@@ -4,10 +4,37 @@ class Type:
     def to_byte(self) -> u8:
         raise NotImplementedError()
 
+    def to_boolean(self) -> bool:
+        raise NotImplementedError()
+
+    def to_int16(self) -> i16:
+        raise NotImplementedError()
+
+    def to_uint16(self) -> u16:
+        raise NotImplementedError()
+
     def to_int32(self) -> i32:
         raise NotImplementedError()
 
+    def to_uint32(self) -> u32:
+        raise NotImplementedError()
+
+    def to_int64(self) -> i64:
+        raise NotImplementedError()
+
+    def to_uint64(self) -> u64:
+        raise NotImplementedError()
+
+    def to_double(self) -> f64:
+        raise NotImplementedError()
+
     def to_string(self) -> string:
+        raise NotImplementedError()
+
+    def to_object_path(self) -> string:
+        raise NotImplementedError()
+
+    def to_signature(self) -> string:
         raise NotImplementedError()
 
     def to_array(self) -> [Type]:
@@ -17,6 +44,9 @@ class Type:
         raise NotImplementedError()
 
     def to_dict(self) -> {Type: Type}:
+        raise NotImplementedError()
+
+    def to_variant(self) -> (string, Type):
         raise NotImplementedError()
 
 class Byte(Type):
@@ -36,6 +66,9 @@ class Boolean(Type):
 
     value: bool
 
+    def to_boolean(self) -> bool:
+        return self.value
+
 class Int16(Type):
     """An INT16. Type code 'n'.
 
@@ -43,12 +76,18 @@ class Int16(Type):
 
     value: i16
 
+    def to_int16(self) -> i16:
+        return self.value
+
 class Uint16(Type):
     """An UINT16. Type code 'q'.
 
     """
 
     value: u16
+
+    def to_uint16(self) -> u16:
+        return self.value
 
 class Int32(Type):
     """An INT32. Type code 'i'.
@@ -67,12 +106,18 @@ class Uint32(Type):
 
     value: u32
 
+    def to_uint32(self) -> u32:
+        return self.value
+
 class Int64(Type):
     """An INT64. Type code 'x'.
 
     """
 
     value: i64
+
+    def to_int64(self) -> i64:
+        return self.value
 
 class Uint64(Type):
     """An UINT64. Type code 't'.
@@ -81,12 +126,18 @@ class Uint64(Type):
 
     value: u64
 
+    def to_uint64(self) -> u64:
+        return self.value
+
 class Double(Type):
     """A DOUBLE. Type code 'd'.
 
     """
 
     value: f64
+
+    def to_double(self) -> f64:
+        return self.value
 
 class String(Type):
     """A STRING. Type code 's'.
@@ -110,12 +161,18 @@ class ObjectPath(Type):
 
     value: string
 
+    def to_object_path(self) -> string:
+        return self.value
+
 class Signature(Type):
     """A SIGNATURE. Type code 'g'.
 
     """
 
     value: string
+
+    def to_signature(self) -> string:
+        return self.value
 
 class Array(Type):
     """An ARRAY. Type code 'a'.
@@ -154,3 +211,6 @@ class Variant(Type):
 
     signature: string
     value: Type
+
+    def to_variant(self) -> (string, Type):
+        return (self.signature, self.value)

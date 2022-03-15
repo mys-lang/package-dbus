@@ -483,11 +483,7 @@ def test_marshal_byte():
 
 @test
 def test_unmarshal_byte():
-    match _unmarshal_unpack_list("y", b"\x34"):
-        case Byte() as value:
-            assert value.value == 0x34
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list("y", b"\x34").to_byte() == 0x34
 
 @test
 def test_marshal_boolean():
@@ -496,17 +492,8 @@ def test_marshal_boolean():
 
 @test
 def test_unmarshal_boolean():
-    match _unmarshal_unpack_list("b", b"\x00\x00\x00\x00"):
-        case Boolean() as value:
-            assert not value.value
-        case _:
-            raise AssertionError()
-
-    match _unmarshal_unpack_list("b", b"\x00\x00\x00\x01"):
-        case Boolean() as value:
-            assert value.value
-        case _:
-            raise AssertionError()
+    assert not _unmarshal_unpack_list("b", b"\x00\x00\x00\x00").to_boolean()
+    assert _unmarshal_unpack_list("b", b"\x00\x00\x00\x01").to_boolean()
 
 @test
 def test_marshal_int16():
@@ -515,17 +502,8 @@ def test_marshal_int16():
 
 @test
 def test_unmarshal_int16():
-    match _unmarshal_unpack_list("n", b"\x12\x34"):
-        case Int16() as value:
-            assert value.value == 0x1234
-        case _:
-            raise AssertionError()
-
-    match _unmarshal_unpack_list("n", b"\xff\xfe"):
-        case Int16() as value:
-            assert value.value == -2
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list("n", b"\x12\x34").to_int16() == 0x1234
+    assert _unmarshal_unpack_list("n", b"\xff\xfe").to_int16() == -2
 
 @test
 def test_marshal_uint16():
@@ -533,11 +511,7 @@ def test_marshal_uint16():
 
 @test
 def test_unmarshal_uint16():
-    match _unmarshal_unpack_list("q", b"\x12\x34"):
-        case Uint16() as value:
-            assert value.value == 0x1234
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list("q", b"\x12\x34").to_uint16() == 0x1234
 
 @test
 def test_marshal_int32():
@@ -546,17 +520,8 @@ def test_marshal_int32():
 
 @test
 def test_unmarshal_int32():
-    match _unmarshal_unpack_list("i", b"\x12\x34\x56\x78"):
-        case Int32() as value:
-            assert value.value == 0x12345678
-        case _:
-            raise AssertionError()
-
-    match _unmarshal_unpack_list("i", b"\xff\xff\xff\xfe"):
-        case Int32() as value:
-            assert value.value == -2
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list("i", b"\x12\x34\x56\x78").to_int32() == 0x12345678
+    assert _unmarshal_unpack_list("i", b"\xff\xff\xff\xfe").to_int32() == -2
 
 @test
 def test_marshal_uint32():
@@ -564,42 +529,33 @@ def test_marshal_uint32():
 
 @test
 def test_unmarshal_uint32():
-    match _unmarshal_unpack_list("u", b"\x12\x34\x56\x78"):
-        case Uint32() as value:
-            assert value.value == 0x12345678
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list("u", b"\x12\x34\x56\x78").to_uint32() == 0x12345678
 
 @test
 def test_marshal_int64():
-    assert _marshal_pack_list(Int64(0x12345678abcdef)) == b"\x00\x12\x34\x56\x78\xab\xcd\xef"
+    assert _marshal_pack_list(Int64(0x12345678abcdef)) == (
+        b"\x00\x12\x34\x56\x78\xab\xcd\xef")
     assert _marshal_pack_list(Int64(-2)) == b"\xff\xff\xff\xff\xff\xff\xff\xfe"
 
 @test
 def test_unmarshal_int64():
-    match _unmarshal_unpack_list("x", b"\x00\x12\x34\x56\x78\xab\xcd\xef"):
-        case Int64() as value:
-            assert value.value == 0x12345678abcdef
-        case _:
-            raise AssertionError()
-
-    match _unmarshal_unpack_list("x", b"\xff\xff\xff\xff\xff\xff\xff\xfe"):
-        case Int64() as value:
-            assert value.value == -2
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list(
+        "x",
+        b"\x00\x12\x34\x56\x78\xab\xcd\xef").to_int64() == 0x12345678abcdef
+    assert _unmarshal_unpack_list(
+        "x",
+        b"\xff\xff\xff\xff\xff\xff\xff\xfe").to_int64() == -2
 
 @test
 def test_marshal_uint64():
-    assert _marshal_pack_list(Uint64(0x12345678abcdef)) == b"\x00\x12\x34\x56\x78\xab\xcd\xef"
+    assert _marshal_pack_list(Uint64(0x12345678abcdef)) == (
+        b"\x00\x12\x34\x56\x78\xab\xcd\xef")
 
 @test
 def test_unmarshal_uint64():
-    match _unmarshal_unpack_list("t", b"\x00\x12\x34\x56\x78\xab\xcd\xef"):
-        case Uint64() as value:
-            assert value.value == 0x12345678abcdef
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list(
+        "t",
+        b"\x00\x12\x34\x56\x78\xab\xcd\xef").to_uint64() == 0x12345678abcdef
 
 @test
 def test_marshal_double():
@@ -609,23 +565,15 @@ def test_marshal_double():
 
 @test
 def test_unmarshal_double():
-    match _unmarshal_unpack_list("d", b"\x00\x00\x00\x00\x00\x00\x00\x00"):
-        case Double() as value:
-            assert value.value == 0.0
-        case _:
-            raise AssertionError()
-
-    match _unmarshal_unpack_list("d", b"\x3f\xf0\x00\x00\x00\x00\x00\x00"):
-        case Double() as value:
-            assert value.value == 1.0
-        case _:
-            raise AssertionError()
-
-    match _unmarshal_unpack_list("d", b"\x40\x5f\x66\x66\x66\x66\x66\x66"):
-        case Double() as value:
-            assert value.value == 125.6
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list(
+        "d",
+        b"\x00\x00\x00\x00\x00\x00\x00\x00").to_double() == 0.0
+    assert _unmarshal_unpack_list(
+        "d",
+        b"\x3f\xf0\x00\x00\x00\x00\x00\x00").to_double() == 1.0
+    assert _unmarshal_unpack_list(
+        "d",
+        b"\x40\x5f\x66\x66\x66\x66\x66\x66").to_double() == 125.6
 
 @test
 def test_marshal_string():
@@ -634,17 +582,10 @@ def test_marshal_string():
 
 @test
 def test_unmarshal_string():
-    match _unmarshal_unpack_list("s", b"\x00\x00\x00\x00\x00"):
-        case String() as value:
-            assert value.value == ""
-        case _:
-            raise AssertionError()
-
-    match _unmarshal_unpack_list("s", b"\x00\x00\x00\x03\x66\x6f\x6f\x00"):
-        case String() as value:
-            assert value.value == "foo"
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list("s", b"\x00\x00\x00\x00\x00").to_string() == ""
+    assert _unmarshal_unpack_list(
+        "s",
+        b"\x00\x00\x00\x03\x66\x6f\x6f\x00").to_string() == "foo"
 
 @test
 def test_marshal_object_path():
@@ -653,13 +594,10 @@ def test_marshal_object_path():
 
 @test
 def test_unmarshal_object_path():
-    match _unmarshal_unpack_list(
+    assert _unmarshal_unpack_list(
         "o",
-        b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00"):
-        case ObjectPath() as value:
-            assert value.value == "/Example"
-        case _:
-            raise AssertionError()
+        b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00"
+    ).to_object_path() == "/Example"
 
 @test
 def test_marshal_signature():
@@ -667,11 +605,7 @@ def test_marshal_signature():
 
 @test
 def test_unmarshal_signature():
-    match _unmarshal_unpack_list("g", b"\x03\x75\x73\x69\x00"):
-        case Signature() as value:
-            assert value.value == "usi"
-        case _:
-            raise AssertionError()
+    assert _unmarshal_unpack_list("g", b"\x03\x75\x73\x69\x00").to_signature() == "usi"
 
 @test
 def test_marshal_array_int64():
@@ -687,40 +621,21 @@ def test_marshal_array_int64():
 
 @test
 def test_unmarshal_array_int64():
-    match _unmarshal_unpack_list("ax",
-                                 b"\x00\x00\x00\x08"
-                                 b"\x00\x00\x00\x00"
-                                 b"\x00\x00\x00\x00\x00\x00\x00\x05"):
-        case Array() as value:
-            match value.value[0]:
-                case Int64() as int64:
-                    assert int64.value == 5
-                case _:
-                    raise AssertionError()
-        case _:
-            raise AssertionError()
+    values = _unmarshal_unpack_list("ax",
+                                    b"\x00\x00\x00\x08"
+                                    b"\x00\x00\x00\x00"
+                                    b"\x00\x00\x00\x00\x00\x00\x00\x05").to_array()
+    assert len(values) == 1
+    assert values[0].to_int64() == 5
 
-    match _unmarshal_unpack_list("ax",
-                                 b"\x00\x00\x00\x10"
-                                 b"\x00\x00\x00\x00"
-                                 b"\x00\x00\x00\x00\x00\x00\x00\x05"
-                                 b"\x00\x00\x00\x00\x00\x00\x00\x07"):
-        case Array() as value:
-            assert len(value.value) == 2
-
-            match value.value[0]:
-                case Int64() as int64:
-                    assert int64.value == 5
-                case _:
-                    raise AssertionError()
-
-            match value.value[1]:
-                case Int64() as int64:
-                    assert int64.value == 7
-                case _:
-                    raise AssertionError()
-        case _:
-            raise AssertionError()
+    values = _unmarshal_unpack_list("ax",
+                                    b"\x00\x00\x00\x10"
+                                    b"\x00\x00\x00\x00"
+                                    b"\x00\x00\x00\x00\x00\x00\x00\x05"
+                                    b"\x00\x00\x00\x00\x00\x00\x00\x07").to_array()
+    assert len(values) == 2
+    assert values[0].to_int64() == 5
+    assert values[1].to_int64() == 7
 
 @test
 def test_marshal_array_int32():
@@ -731,26 +646,13 @@ def test_marshal_array_int32():
 
 @test
 def test_unmarshal_array_int32():
-    match _unmarshal_unpack_list("ai",
-                                 b"\x00\x00\x00\x08"
-                                 b"\x00\x00\x00\x05"
-                                 b"\x00\x00\x00\x07"):
-        case Array() as value:
-            assert len(value.value) == 2
-
-            match value.value[0]:
-                case Int32() as int32:
-                    assert int32.value == 5
-                case _:
-                    raise AssertionError()
-
-            match value.value[1]:
-                case Int32() as int32:
-                    assert int32.value == 7
-                case _:
-                    raise AssertionError()
-        case _:
-            raise AssertionError()
+    values = _unmarshal_unpack_list("ai",
+                                    b"\x00\x00\x00\x08"
+                                    b"\x00\x00\x00\x05"
+                                    b"\x00\x00\x00\x07").to_array()
+    assert len(values) == 2
+    assert values[0].to_int32() == 5
+    assert values[1].to_int32() == 7
 
 @test
 def test_marshal_struct_header():
@@ -773,56 +675,15 @@ def test_unmarshal_struct_header():
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
     assert len(values) == 1
-
-    match values[0]:
-        case Struct() as value:
-            values = value.value
-        case _:
-            raise AssertionError()
-
+    values = values[0].to_struct()
     assert len(values) == 7
-
-    match values[0]:
-        case Byte() as value:
-            assert value.value == u8(i32('B'))
-        case _:
-            raise AssertionError()
-
-    match values[1]:
-        case Byte() as value:
-            assert value.value == 1
-        case _:
-            raise AssertionError()
-
-    match values[2]:
-        case Byte() as value:
-            assert value.value == 0
-        case _:
-            raise AssertionError()
-
-    match values[3]:
-        case Byte() as value:
-            assert value.value == 1
-        case _:
-            raise AssertionError()
-
-    match values[4]:
-        case Uint32() as value:
-            assert value.value == 0
-        case _:
-            raise AssertionError()
-
-    match values[5]:
-        case Uint32() as value:
-            assert value.value == 3
-        case _:
-            raise AssertionError()
-
-    match values[6]:
-        case Array() as value:
-            assert len(value.value) == 0
-        case _:
-            raise AssertionError()
+    assert values[0].to_byte() == u8(i32('B'))
+    assert values[1].to_byte() == 1
+    assert values[2].to_byte() == 0
+    assert values[3].to_byte() == 1
+    assert values[4].to_uint32() == 0
+    assert values[5].to_uint32() == 3
+    assert len(values[6].to_array()) == 0
 
 @test
 def test_marshal_header():
@@ -844,47 +705,14 @@ def test_unmarshal_header():
         "yyyyuua(yv)",
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
-    match values[0]:
-        case Byte() as value:
-            assert value.value == u8(i32('B'))
-        case _:
-            raise AssertionError()
-
-    match values[1]:
-        case Byte() as value:
-            assert value.value == 1
-        case _:
-            raise AssertionError()
-
-    match values[2]:
-        case Byte() as value:
-            assert value.value == 0
-        case _:
-            raise AssertionError()
-
-    match values[3]:
-        case Byte() as value:
-            assert value.value == 1
-        case _:
-            raise AssertionError()
-
-    match values[4]:
-        case Uint32() as value:
-            assert value.value == 0
-        case _:
-            raise AssertionError()
-
-    match values[5]:
-        case Uint32() as value:
-            assert value.value == 3
-        case _:
-            raise AssertionError()
-
-    match values[6]:
-        case Array() as value:
-            assert len(value.value) == 0
-        case _:
-            raise AssertionError()
+    assert len(values) == 7
+    assert values[0].to_byte() == u8(i32('B'))
+    assert values[1].to_byte() == 1
+    assert values[2].to_byte() == 0
+    assert values[3].to_byte() == 1
+    assert values[4].to_uint32() == 0
+    assert values[5].to_uint32() == 3
+    assert len(values[6].to_array()) == 0
 
 @test
 def test_marshal_variant():
@@ -893,20 +721,11 @@ def test_marshal_variant():
 
 @test
 def test_unmarshal_variant():
-    value = _unmarshal_unpack_list("v", b"\x01\x69\x00\x00\x00\x00\x00\x05")
-
-    match value:
-        case Variant() as variant:
-            assert variant.signature == "i"
-
-            match variant.value:
-                case Int32() as int32:
-                    assert int32.value == 5
-                case _:
-                    raise AssertionError()
-        case _:
-            raise AssertionError()
-
+    signature, value = _unmarshal_unpack_list(
+        "v",
+        b"\x01\x69\x00\x00\x00\x00\x00\x05").to_variant()
+    assert signature == "i"
+    assert value.to_int32() == 5
 
 @test
 def test_marshal_dict():
