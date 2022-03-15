@@ -21,6 +21,8 @@ API
 
 .. mysfile:: src/lib.mys
 
+.. mysfile:: src/types.mys
+
 .. |discord| image:: https://img.shields.io/discord/777073391320170507?label=Discord&logo=discord&logoColor=white
 .. _discord: https://discord.gg/GFDN7JvWKS
 
