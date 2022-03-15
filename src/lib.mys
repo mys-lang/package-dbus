@@ -91,6 +91,7 @@ class SessionBus(Bus):
             ])
         ]
         message = marshal(header)
+        # ToDo: Alignemnt.
         message += body
 
         completion = Completion(current(), None, None)
