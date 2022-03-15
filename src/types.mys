@@ -1,53 +1,56 @@
+class WrongTypeError(Error):
+    pass
+
 @trait
 class Type:
 
     def to_byte(self) -> u8:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_boolean(self) -> bool:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_int16(self) -> i16:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_uint16(self) -> u16:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_int32(self) -> i32:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_uint32(self) -> u32:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_int64(self) -> i64:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_uint64(self) -> u64:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_double(self) -> f64:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_string(self) -> string:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_object_path(self) -> string:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_signature(self) -> string:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_array(self) -> [Type]:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_struct(self) -> [Type]:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_dict(self) -> {Type: Type}:
-        raise NotImplementedError()
+        raise WrongTypeError()
 
     def to_variant(self) -> (string, Type):
-        raise NotImplementedError()
+        raise WrongTypeError()
 
 class Byte(Type):
     """A BYTE. Type code 'y'.
