@@ -1,17 +1,17 @@
 from fiber import Fiber
 from fiber import current
-from fiber import suspend
 from fiber import resume
+from fiber import suspend
 from .client import Object as ClientObject
+from .marshaling import marshal
 from .server import Object as ServerObject
-from .types import Type
-from .types import Struct
 from .types import Array
 from .types import Byte
-from .types import Uint32
 from .types import ObjectPath
 from .types import String
-from .marshaling import marshal
+from .types import Struct
+from .types import Type
+from .types import Uint32
 
 class Handler:
     pass
