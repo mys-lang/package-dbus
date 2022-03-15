@@ -657,7 +657,7 @@ def test_unmarshal_array_int32():
 @test
 def test_marshal_struct_header():
     header = Struct([
-        Byte(u8(i32('B'))),
+        Byte(0x42),
         Byte(1),
         Byte(0),
         Byte(1),
@@ -677,7 +677,7 @@ def test_unmarshal_struct_header():
     assert len(values) == 1
     values = values[0].to_struct()
     assert len(values) == 7
-    assert values[0].to_byte() == u8(i32('B'))
+    assert values[0].to_byte() == 0x42
     assert values[1].to_byte() == 1
     assert values[2].to_byte() == 0
     assert values[3].to_byte() == 1
@@ -688,7 +688,7 @@ def test_unmarshal_struct_header():
 @test
 def test_marshal_header():
     header: [Type] = [
-        Byte(u8(i32('B'))),
+        Byte(0x42),
         Byte(1),
         Byte(0),
         Byte(1),
@@ -706,7 +706,7 @@ def test_unmarshal_header():
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
     assert len(values) == 7
-    assert values[0].to_byte() == u8(i32('B'))
+    assert values[0].to_byte() == 0x42
     assert values[1].to_byte() == 1
     assert values[2].to_byte() == 0
     assert values[3].to_byte() == 1
