@@ -56,12 +56,15 @@ class SignatureReader:
         self._pos = 0
 
     def get(self) -> char:
-        value = self._signature[self._pos]
+        value = self.peek()
         self._pos += 1
 
         return value
 
     def peek(self) -> char:
+        if not self.available():
+            raise MarshalingError("Out of signature characters.")
+
         return self._signature[self._pos]
 
     def available(self) -> bool:
@@ -128,7 +131,13 @@ class Reader:
         self._pos = 0
         self._big_endian = big_endian
 
+    def available(self) -> bool:
+        return self._pos < i64(len(self._data))
+
     def read_u8(self) -> u8:
+        if not self.available():
+            raise MarshalingError("Out of data.")
+
         value = self._data[self._pos]
         self._pos += 1
 
@@ -955,3 +964,23 @@ def test_unmarshal_name_acquire():
 
     assert len(values) == 1
     assert values[0].to_string() == ":1.572"
+
+@test
+def test_unmarshal_out_of_signature_characters():
+    try:
+        unmarshal("a", b"\x00\x00\x00\x00")
+        message = ""
+    except MarshalingError as error:
+        message = error.message
+
+    assert message == "Out of signature characters."
+
+@test
+def test_unmarshal_out_of_data():
+    try:
+        unmarshal("i", b"\x00\x00\x00")
+        message = ""
+    except MarshalingError as error:
+        message = error.message
+
+    assert message == "Out of data."
