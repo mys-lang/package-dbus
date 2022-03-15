@@ -22,7 +22,7 @@ def marshal(values: [Type], big_endian: bool = True) -> bytes:
     """
 
     if not big_endian:
-        raise NotImplementedError()
+        raise NotImplementedError("Little endian is not yet supported.")
 
     writer = Writer()
 
@@ -39,7 +39,7 @@ def unmarshal(signature: string,
     """
 
     if not big_endian:
-        raise NotImplementedError()
+        raise NotImplementedError("Little endian is not yet supported.")
 
     signature_reader = SignatureReader(signature)
     reader = Reader(data)
@@ -49,6 +49,9 @@ def unmarshal(signature: string,
         values.append(_unmarshal(signature_reader, reader))
 
     return values
+
+class MarshalingError(Error):
+    message: string
 
 class SignatureReader:
     _signature: string
@@ -118,8 +121,8 @@ class SignatureReader:
                 self._skip_single_complete_type()
                 self._skip_single_complete_type()
                 self.get()
-            case _:
-                raise NotImplementedError()
+            case _ as ch:
+                raise MarshalingError(f"Unexpectd signature character '{ch}'.")
 
 class Reader:
     _data: bytes
@@ -329,7 +332,7 @@ def _get_alignment(value: Type) -> i64:
         case Dict():
             return 8
         case _:
-            raise NotImplementedError()
+            raise UnreachableError()
 
 def _marshal_array(value: Array, writer: Writer):
     size_pos = writer.get_pos()
@@ -350,7 +353,6 @@ def _marshal_array(value: Array, writer: Writer):
 
 def _marshal_struct(value: Struct, writer: Writer):
     for item in value.to_struct():
-        writer.align(_get_alignment(item))
         _marshal(item, writer)
 
 def _marshal_dict(value: Dict, writer: Writer):
@@ -395,12 +397,12 @@ def _marshal(value: Type, writer: Writer):
         case Variant() as variant:
             _marshal_variant(variant, writer)
         case _:
-            raise NotImplementedError()
+            raise UnreachableError()
 
 def _unmarshal_array(signature_reader: SignatureReader, reader: Reader) -> Array:
     item_pos = signature_reader.tell()
     end = i64(reader.read_u32()) + reader.tell()
-    values: [Type] = []
+    values = []
 
     while reader.tell() < end:
         values.append(_unmarshal(signature_reader, reader))
@@ -411,10 +413,20 @@ def _unmarshal_array(signature_reader: SignatureReader, reader: Reader) -> Array
     return Array(values)
 
 def _unmarshal_struct(signature_reader: SignatureReader, reader: Reader) -> Struct:
-    return Struct([])
+    values = []
+
+    while signature_reader.peek() != ')':
+        values.append(_unmarshal(signature_reader, reader))
+
+    signature_reader.get()
+
+    return Struct(values)
 
 def _unmarshal_variant(reader: Reader) -> Variant:
-    return Variant("", None)
+    signature = reader.read_signature()
+    value = _unmarshal(SignatureReader(signature), reader)
+
+    return Variant(signature, value)
 
 def _unmarshal_dict(signature_reader: SignatureReader, reader: Reader) -> Dict:
     return Dict({})
@@ -453,8 +465,8 @@ def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
             return _unmarshal_variant(reader)
         case '{':
             return _unmarshal_dict(signature_reader, reader)
-        case _:
-            raise NotImplementedError()
+        case _ as ch:
+            raise MarshalingError(f"Unexpectd signature character '{ch}'.")
 
 def _marshal_pack_list(value: Type) -> bytes:
     return marshal([value])
@@ -475,7 +487,7 @@ def test_unmarshal_byte():
         case Byte() as value:
             assert value.value == 0x34
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_boolean():
@@ -488,13 +500,13 @@ def test_unmarshal_boolean():
         case Boolean() as value:
             assert not value.value
         case _:
-            assert False
+            raise AssertionError()
 
     match _unmarshal_unpack_list("b", b"\x00\x00\x00\x01"):
         case Boolean() as value:
             assert value.value
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_int16():
@@ -507,13 +519,13 @@ def test_unmarshal_int16():
         case Int16() as value:
             assert value.value == 0x1234
         case _:
-            assert False
+            raise AssertionError()
 
     match _unmarshal_unpack_list("n", b"\xff\xfe"):
         case Int16() as value:
             assert value.value == -2
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_uint16():
@@ -525,7 +537,7 @@ def test_unmarshal_uint16():
         case Uint16() as value:
             assert value.value == 0x1234
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_int32():
@@ -538,13 +550,13 @@ def test_unmarshal_int32():
         case Int32() as value:
             assert value.value == 0x12345678
         case _:
-            assert False
+            raise AssertionError()
 
     match _unmarshal_unpack_list("i", b"\xff\xff\xff\xfe"):
         case Int32() as value:
             assert value.value == -2
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_uint32():
@@ -556,7 +568,7 @@ def test_unmarshal_uint32():
         case Uint32() as value:
             assert value.value == 0x12345678
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_int64():
@@ -569,13 +581,13 @@ def test_unmarshal_int64():
         case Int64() as value:
             assert value.value == 0x12345678abcdef
         case _:
-            assert False
+            raise AssertionError()
 
     match _unmarshal_unpack_list("x", b"\xff\xff\xff\xff\xff\xff\xff\xfe"):
         case Int64() as value:
             assert value.value == -2
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_uint64():
@@ -587,7 +599,7 @@ def test_unmarshal_uint64():
         case Uint64() as value:
             assert value.value == 0x12345678abcdef
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_double():
@@ -601,19 +613,19 @@ def test_unmarshal_double():
         case Double() as value:
             assert value.value == 0.0
         case _:
-            assert False
+            raise AssertionError()
 
     match _unmarshal_unpack_list("d", b"\x3f\xf0\x00\x00\x00\x00\x00\x00"):
         case Double() as value:
             assert value.value == 1.0
         case _:
-            assert False
+            raise AssertionError()
 
     match _unmarshal_unpack_list("d", b"\x40\x5f\x66\x66\x66\x66\x66\x66"):
         case Double() as value:
             assert value.value == 125.6
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_string():
@@ -626,13 +638,13 @@ def test_unmarshal_string():
         case String() as value:
             assert value.value == ""
         case _:
-            assert False
+            raise AssertionError()
 
     match _unmarshal_unpack_list("s", b"\x00\x00\x00\x03\x66\x6f\x6f\x00"):
         case String() as value:
             assert value.value == "foo"
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_object_path():
@@ -647,7 +659,7 @@ def test_unmarshal_object_path():
         case ObjectPath() as value:
             assert value.value == "/Example"
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_signature():
@@ -659,7 +671,7 @@ def test_unmarshal_signature():
         case Signature() as value:
             assert value.value == "usi"
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_array_int64():
@@ -684,9 +696,9 @@ def test_unmarshal_array_int64():
                 case Int64() as int64:
                     assert int64.value == 5
                 case _:
-                    assert False
+                    raise AssertionError()
         case _:
-            assert False
+            raise AssertionError()
 
     match _unmarshal_unpack_list("ax",
                                  b"\x00\x00\x00\x10"
@@ -700,15 +712,15 @@ def test_unmarshal_array_int64():
                 case Int64() as int64:
                     assert int64.value == 5
                 case _:
-                    assert False
+                    raise AssertionError()
 
             match value.value[1]:
                 case Int64() as int64:
                     assert int64.value == 7
                 case _:
-                    assert False
+                    raise AssertionError()
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_array_int32():
@@ -730,15 +742,15 @@ def test_unmarshal_array_int32():
                 case Int32() as int32:
                     assert int32.value == 5
                 case _:
-                    assert False
+                    raise AssertionError()
 
             match value.value[1]:
                 case Int32() as int32:
                     assert int32.value == 7
                 case _:
-                    assert False
+                    raise AssertionError()
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_struct_header():
@@ -753,6 +765,64 @@ def test_marshal_struct_header():
     ])
     assert _marshal_pack_list(header) == (
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
+
+@test
+def test_unmarshal_struct_header():
+    values = unmarshal(
+        "(yyyyuua(yv))",
+        b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
+
+    assert len(values) == 1
+
+    match values[0]:
+        case Struct() as value:
+            values = value.value
+        case _:
+            raise AssertionError()
+
+    assert len(values) == 7
+
+    match values[0]:
+        case Byte() as value:
+            assert value.value == u8(i32('B'))
+        case _:
+            raise AssertionError()
+
+    match values[1]:
+        case Byte() as value:
+            assert value.value == 1
+        case _:
+            raise AssertionError()
+
+    match values[2]:
+        case Byte() as value:
+            assert value.value == 0
+        case _:
+            raise AssertionError()
+
+    match values[3]:
+        case Byte() as value:
+            assert value.value == 1
+        case _:
+            raise AssertionError()
+
+    match values[4]:
+        case Uint32() as value:
+            assert value.value == 0
+        case _:
+            raise AssertionError()
+
+    match values[5]:
+        case Uint32() as value:
+            assert value.value == 3
+        case _:
+            raise AssertionError()
+
+    match values[6]:
+        case Array() as value:
+            assert len(value.value) == 0
+        case _:
+            raise AssertionError()
 
 @test
 def test_marshal_header():
@@ -778,47 +848,65 @@ def test_unmarshal_header():
         case Byte() as value:
             assert value.value == u8(i32('B'))
         case _:
-            assert False
+            raise AssertionError()
 
     match values[1]:
         case Byte() as value:
             assert value.value == 1
         case _:
-            assert False
+            raise AssertionError()
 
     match values[2]:
         case Byte() as value:
             assert value.value == 0
         case _:
-            assert False
+            raise AssertionError()
 
     match values[3]:
         case Byte() as value:
             assert value.value == 1
         case _:
-            assert False
+            raise AssertionError()
 
     match values[4]:
         case Uint32() as value:
             assert value.value == 0
         case _:
-            assert False
+            raise AssertionError()
 
     match values[5]:
         case Uint32() as value:
             assert value.value == 3
         case _:
-            assert False
+            raise AssertionError()
 
     match values[6]:
         case Array() as value:
             assert len(value.value) == 0
         case _:
-            assert False
+            raise AssertionError()
 
 @test
 def test_marshal_variant():
-    assert _marshal_pack_list(Variant("i", Int32(5))) == b"\x01\x69\x00\x00\x00\x00\x00\x05"
+    assert _marshal_pack_list(Variant("i", Int32(5))) == (
+        b"\x01\x69\x00\x00\x00\x00\x00\x05")
+
+@test
+def test_unmarshal_variant():
+    value = _unmarshal_unpack_list("v", b"\x01\x69\x00\x00\x00\x00\x00\x05")
+
+    match value:
+        case Variant() as variant:
+            assert variant.signature == "i"
+
+            match variant.value:
+                case Int32() as int32:
+                    assert int32.value == 5
+                case _:
+                    raise AssertionError()
+        case _:
+            raise AssertionError()
+
 
 @test
 def test_marshal_dict():
