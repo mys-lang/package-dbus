@@ -481,7 +481,9 @@ def _unmarshal_dict(signature_reader: SignatureReader, reader: Reader) -> Dict:
 
     signature_reader.skip_single_complete_type()
     signature_reader.skip_single_complete_type()
-    signature_reader.get()
+
+    if signature_reader.get() != '}':
+        raise MarshalingError("Invalid dict signature end.")
 
     return Dict(values)
 
