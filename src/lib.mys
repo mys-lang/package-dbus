@@ -16,6 +16,8 @@ from .types import Struct
 from .types import Type
 from .types import Uint32
 
+PROTOCOL_VERSION: u8 = 1
+
 @trait
 class SignalHandler:
     pass
@@ -31,6 +33,20 @@ class Completion:
     fiber: Fiber
     header: [Type]
     data: [Type]
+
+def _build_header(serial: u32,
+                  message_type: MessageType,
+                  body: bytes,
+                  header_fields: [Type]) -> [Type]:
+    return [
+        Byte(u8(i32('B'))),
+        Byte(u8(message_type)),
+        Byte(0),
+        Byte(PROTOCOL_VERSION),
+        Uint32(u32(len(body))),
+        Uint32(serial),
+        Array(header_fields)
+    ]
 
 class SessionBus(Bus):
     _handler: Handler
@@ -71,7 +87,7 @@ class SessionBus(Bus):
         pass
 
     def call(self,
-             bus_name: string,
+             destination: string,
              object_path: string,
              interface: string,
              method: string,
@@ -81,25 +97,20 @@ class SessionBus(Bus):
 
         """
 
-        body = marshal(arguments)
         serial = self._next_serial()
-        header: [Type] = [
-            Byte(u8(i32('B'))),
-            Byte(u8(MessageType.MethodCall)),
-            Byte(0),
-            Byte(1),
-            Uint32(u32(len(body))),
-            Uint32(serial),
-            Array([
+        body = marshal(arguments)
+        header = _build_header(
+            serial,
+            MessageType.MethodCall,
+            body,
+            [
                 Struct([Byte(u8(HeaderFields.Path)), ObjectPath(object_path)]),
                 Struct([Byte(u8(HeaderFields.Interface)), String(interface)]),
-                Struct([Byte(u8(HeaderFields.Destination)), String(bus_name)]),
+                Struct([Byte(u8(HeaderFields.Destination)), String(destination)]),
                 Struct([Byte(u8(HeaderFields.Member)), String(method)]),
                 Struct([Byte(u8(HeaderFields.Signature)), Signature(signature)])
             ])
-        ]
-        message = marshal(header)
-        # ToDo: Alignemnt.
+        message = marshal(header, align=8)
         message += body
 
         completion = Completion(current(), None, None)
@@ -118,6 +129,22 @@ class SessionBus(Bus):
         """Emit given signal from given object.
 
         """
+
+        body = marshal(arguments)
+        header = _build_header(
+            self._next_serial(),
+            MessageType.Signal,
+            body,
+            [
+                Struct([Byte(u8(HeaderFields.Path)), ObjectPath(object_path)]),
+                Struct([Byte(u8(HeaderFields.Interface)), String(interface)]),
+                Struct([Byte(u8(HeaderFields.Member)), String(signal)]),
+                Struct([Byte(u8(HeaderFields.Signature)), Signature(signature)])
+            ])
+        message = marshal(header, align=8)
+        message += body
+
+        self._write(message)
 
     def _next_serial(self) -> u32:
         self._serial += 1

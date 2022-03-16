@@ -16,7 +16,7 @@ from .types import Uint32
 from .types import Uint64
 from .types import Variant
 
-def marshal(values: [Type], big_endian: bool = True) -> bytes:
+def marshal(values: [Type], big_endian: bool = True, align: i64 = 1) -> bytes:
     """Marshal given values.
 
     """
@@ -25,6 +25,8 @@ def marshal(values: [Type], big_endian: bool = True) -> bytes:
 
     for value in values:
         _marshal(value, writer)
+
+    writer.align(align)
 
     return writer.finalize()
 
@@ -869,7 +871,7 @@ def test_marshal_name_acquire():
                 Byte(7), Variant("s", String("org.freedesktop.DBus"))
             ]),
         ])
-    ])
+    ], align=8)
 
     assert marshalled == (
         b"\x4b\x04\x01\x01" b"\x00\x00\x00\x0b" b"\x00\x00\x00\x02"
@@ -884,7 +886,7 @@ def test_marshal_name_acquire():
         b"\x00\x00\x00\x06:1.572\x00\x00"
         b"\x08" b"\x01\x67\x00" b"\x01s\x00\x00"
         b"\x07" b"\x01\x73\x00"
-        b"\x00\x00\x00\x14org.freedesktop.DBus\x00")
+        b"\x00\x00\x00\x14org.freedesktop.DBus\x00\x00\x00\x00")
 
     # Body.
     marshalled = marshal([String(":1.572")])
