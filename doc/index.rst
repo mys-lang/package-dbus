@@ -19,7 +19,13 @@ See https://github.com/mys-lang/package-dbus/tree/main/examples/basic.
 API
 ===
 
+dbus
+----
+
 .. mysfile:: src/lib.mys
+
+dbus.types
+----------
 
 .. mysfile:: src/types.mys
 
