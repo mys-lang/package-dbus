@@ -4,6 +4,7 @@ from fiber import resume
 from fiber import suspend
 from .client import Object as ClientObject
 from .marshaling import marshal
+from .marshaling import unmarshal
 from .message import HeaderFields
 from .message import Type as MessageType
 from .server import Object as ServerObject
@@ -29,10 +30,75 @@ class Handler:
 class Bus:
     pass
 
-class Completion:
+class _Completion:
     fiber: Fiber
     header: [Type]
     data: [Type]
+
+class _MessageReader(Fiber):
+
+    def run(self):
+        while True:
+            serial, message_type, body, header_fields = self._read_message()
+
+            match message_type:
+                case MessageType.MethodCall:
+                    self._handle_method_call()
+                case MessageType.MethodReturn:
+                    self._handle_method_return(serial, body, header_fields)
+                case MessageType.Error:
+                    self._handle_error()
+                case MessageType.Signal:
+                    self._handle_signal()
+
+    def _read(self, size: u32) -> bytes:
+        raise NotImplementedError()
+
+    def _read_message(self) -> (u32, MessageType, bytes, [Type]):
+        data = self._read(16)
+
+        if data[3] != _PROTOCOL_VERSION:
+            raise NotImplementedError()
+
+        big_endian = (data[0] == u8(i32('B')))
+
+        if big_endian:
+            header_fields_size = ((u32(data[13]) << 24)
+                                  | (u32(data[14]) << 16)
+                                  | (u32(data[15]) << 8)
+                                  | (u32(data[16]) << 0))
+        else:
+            header_fields_size = ((u32(data[13]) << 0)
+                                  | (u32(data[14]) << 8)
+                                  | (u32(data[15]) << 16)
+                                  | (u32(data[16]) << 24))
+
+        header_fields_size += 7
+        header_fields_size &= ~0x7
+
+        data += self._read(header_fields_size)
+        header = unmarshal("yyyyuua(yv)", data, big_endian)
+        body = self._read(header[4].to_uint32())
+
+        return (header[5].to_uint32(),
+                MessageType(header[1].to_byte()),
+                body,
+                header[6].to_array())
+
+    def _handle_method_call(self):
+        raise NotImplementedError()
+
+    def _handle_method_return(self,
+                              serial: u32,
+                              body: bytes,
+                              header_fields: [Type]):
+        raise NotImplementedError()
+
+    def _handle_error(self):
+        raise NotImplementedError()
+
+    def _handle_signal(self):
+        raise NotImplementedError()
 
 def _build_header(serial: u32,
                   message_type: MessageType,
@@ -51,7 +117,7 @@ def _build_header(serial: u32,
 class SessionBus(Bus):
     _handler: Handler
     _serial: u32
-    _completions: {u32: Completion}
+    _completions: {u32: _Completion}
 
     def __init__(self, handler: Handler = None):
         self._handler = handler
@@ -113,7 +179,7 @@ class SessionBus(Bus):
         message = marshal(header, align=8)
         message += body
 
-        completion = Completion(current(), None, None)
+        completion = _Completion(current(), None, None)
         self._completions[serial] = completion
         self._write(message)
         suspend()
