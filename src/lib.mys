@@ -76,12 +76,12 @@ class SessionBus(Bus):
              interface: string,
              method: string,
              signature: string,
-             values: [Type]) -> [Type]:
+             arguments: [Type]) -> [Type]:
         """Call given method on given object.
 
         """
 
-        body = marshal(values)
+        body = marshal(arguments)
         serial = self._next_serial()
         header: [Type] = [
             Byte(u8(i32('B'))),
@@ -114,7 +114,7 @@ class SessionBus(Bus):
              interface: string,
              method: string,
              signature: string,
-             values: [Type]):
+             arguments: [Type]):
         pass
 
     def _next_serial(self) -> u32:
