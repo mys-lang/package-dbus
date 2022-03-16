@@ -16,7 +16,7 @@ from .types import Struct
 from .types import Type
 from .types import Uint32
 
-PROTOCOL_VERSION: u8 = 1
+_PROTOCOL_VERSION: u8 = 1
 
 @trait
 class SignalHandler:
@@ -42,7 +42,7 @@ def _build_header(serial: u32,
         Byte(u8(i32('B'))),
         Byte(u8(message_type)),
         Byte(0),
-        Byte(PROTOCOL_VERSION),
+        Byte(_PROTOCOL_VERSION),
         Uint32(u32(len(body))),
         Uint32(serial),
         Array(header_fields)
