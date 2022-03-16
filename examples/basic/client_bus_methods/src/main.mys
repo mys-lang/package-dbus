@@ -3,7 +3,6 @@ from dbus import SignalHandler
 from dbus.types import String
 from dbus.types import Type
 
-
 class Handler(SignalHandler):
 
     def on_signal(self,
@@ -13,7 +12,6 @@ class Handler(SignalHandler):
                   signal: string,
                   values: [Type]):
         print("Signal:", sender, object_path, interface, signal, values)
-
 
 def main():
     bus = SessionBus()

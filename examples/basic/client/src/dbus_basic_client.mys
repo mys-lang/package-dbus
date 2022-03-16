@@ -1,17 +1,17 @@
 # This file was genrated by dbus.py.
 
 from dbus.client import Object
-from dbus.types import Type
-from dbus.types import Byte
-from dbus.types import Int32
-from dbus.types import Uint32
-from dbus.types import String
-from dbus.types import Array
-from dbus.types import Struct
-from dbus.types import Byte
-from dbus.types import Variant
-from dbus.types import Dict
 from dbus.marshaling import marshal
+from dbus.types import Array
+from dbus.types import Byte
+from dbus.types import Byte
+from dbus.types import Dict
+from dbus.types import Int32
+from dbus.types import String
+from dbus.types import Struct
+from dbus.types import Type
+from dbus.types import Uint32
+from dbus.types import Variant
 
 @trait
 class BasicDemoInterface:
