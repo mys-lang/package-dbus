@@ -1,6 +1,7 @@
 from dbus import SessionBus
 from dbus import SignalHandler
 from dbus.types import String
+from dbus.types import Type
 
 
 class Handler(SignalHandler):
@@ -10,8 +11,8 @@ class Handler(SignalHandler):
                   object_path: string,
                   interface: string,
                   signal: string,
-                  body: Type):
-        print("Signal:", sender, object_path, interface, signal, body)
+                  values: [Type]):
+        print("Signal:", sender, object_path, interface, signal, values)
 
 
 def main():
@@ -22,6 +23,7 @@ def main():
                    "/Basic1",
                    "org.example.BasicDemo",
                    "Hello",
-                   String("Hello!")))
-    bus.emit("/Basic1", "org.example.BasicDemo", "Alive")
+                   "s",
+                   [String("Hello!")]))
+    bus.emit("/Basic1", "org.example.BasicDemo", "Alive", "", [])
     bus.join()

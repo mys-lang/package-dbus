@@ -117,7 +117,9 @@ class SignatureReader:
             case '{':
                 self._skip_single_complete_type()
                 self._skip_single_complete_type()
-                self.get()
+
+                if self.get() != '}':
+                    raise MarshalingError("Invalid dict signature end.")
             case _ as ch:
                 raise MarshalingError(f"Unexpectd signature character '{ch}'.")
 
