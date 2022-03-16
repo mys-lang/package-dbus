@@ -112,10 +112,12 @@ class SessionBus(Bus):
     def emit(self,
              object_path: string,
              interface: string,
-             method: string,
+             signal: string,
              signature: string,
              arguments: [Type]):
-        pass
+        """Emit given signal from given object.
+
+        """
 
     def _next_serial(self) -> u32:
         self._serial += 1
