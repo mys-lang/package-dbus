@@ -24,7 +24,7 @@ class CallError(Error):
 
     """
 
-    error: string
+    error_name: string
     message: string
 
 @trait
@@ -49,7 +49,7 @@ class _Message:
     interface: string
     member: string
     signature: string
-    error: string
+    error_name: string
 
     def __init__(self,
                  big_endian: bool,
@@ -133,7 +133,7 @@ class _MessageReader(Fiber):
                 case HeaderFields.Member:
                     message.member = value.to_string()
                 case HeaderFields.ErrorName:
-                    message.error = value.to_string()
+                    message.error_name = value.to_string()
                 case HeaderFields.Signature:
                     message.signature = value.to_signature()
 
@@ -254,7 +254,7 @@ class SessionBus(Bus):
             else:
                 error_message = returned[0].to_struct()[1].to_string()
 
-            raise CallError(completion.message.error, error_message)
+            raise CallError(completion.message.error_name, error_message)
 
     def emit(self,
              object_path: string,
