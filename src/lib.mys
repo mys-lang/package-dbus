@@ -113,13 +113,12 @@ class _MessageReader(Fiber):
 
         data += self._read(header_fields_size)
         header = unmarshal("yyyyuua(yv)", data, big_endian)
-        header_fields = header[6].to_array()
         message = _Message(big_endian,
                            MessageType(header[1].to_byte()),
                            header[5].to_uint32(),
                            self._read(header[4].to_uint32()))
 
-        for header_field in header_fields:
+        for header_field in header[6].to_array():
             item = header_field.to_struct()
             field = HeaderFields(item[0].to_byte())
             value = item[1].to_variant()[1]
