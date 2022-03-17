@@ -18,3 +18,5 @@ class HeaderFields:
     Sender = 7
     Signature = 8
     UnixFds = 9
+
+HEADER_SIGNATURE: string = "yyyyuua(yv)"
