@@ -19,11 +19,16 @@ from .types import Uint32
 
 _PROTOCOL_VERSION: u8 = 1
 
+class CallError(Error):
+    """A call failed with an error.
+
+    """
+
+    error: string
+    message: string
+
 @trait
 class SignalHandler:
-    pass
-
-class Handler:
     pass
 
 @trait
@@ -32,29 +37,59 @@ class Bus:
 
 class _Completion:
     fiber: Fiber
-    header: [Type]
-    data: [Type]
+    message: _Message
+
+class _Message:
+    big_endian: bool
+    type: MessageType
+    serial: u32
+    body: bytes
+    path: string
+    destination: string
+    interface: string
+    member: string
+    signature: string
+    error: string
+
+    def __init__(self,
+                 big_endian: bool,
+                 type: MessageType,
+                 serial: u32,
+                 body: bytes):
+        self.big_endian = big_endian
+        self.type = type
+        self.serial = serial
+        self.body = body
+        self.path = None
+        self.destination = None
+        self.interface = None
+        self.member = None
+        self.signature = None
 
 class _MessageReader(Fiber):
+    _completions: {u32: _Completion}
+
+    def __init__(self, completions: {u32: _Completion}):
+        self._completions = completions
 
     def run(self):
         while True:
-            serial, message_type, body, header_fields = self._read_message()
+            message = self._read_message()
 
-            match message_type:
+            match message.type:
                 case MessageType.MethodCall:
-                    self._handle_method_call()
+                    self._handle_method_call(message)
                 case MessageType.MethodReturn:
-                    self._handle_method_return(serial, body, header_fields)
+                    self._handle_method_return_and_error(message)
                 case MessageType.Error:
-                    self._handle_error()
+                    self._handle_method_return_and_error(message)
                 case MessageType.Signal:
-                    self._handle_signal()
+                    self._handle_signal(message)
 
     def _read(self, size: u32) -> bytes:
         raise NotImplementedError()
 
-    def _read_message(self) -> (u32, MessageType, bytes, [Type]):
+    def _read_message(self) -> _Message:
         data = self._read(16)
 
         if data[3] != _PROTOCOL_VERSION:
@@ -78,26 +113,46 @@ class _MessageReader(Fiber):
 
         data += self._read(header_fields_size)
         header = unmarshal("yyyyuua(yv)", data, big_endian)
-        body = self._read(header[4].to_uint32())
+        header_fields = header[6].to_array()
+        message = _Message(big_endian,
+                           MessageType(header[1].to_byte()),
+                           header[5].to_uint32(),
+                           self._read(header[4].to_uint32()))
 
-        return (header[5].to_uint32(),
-                MessageType(header[1].to_byte()),
-                body,
-                header[6].to_array())
+        for header_field in header_fields:
+            item = header_field.to_struct()
+            field = HeaderFields(item[0].to_byte())
+            value = item[1].to_variant()[1]
 
-    def _handle_method_call(self):
+            match field:
+                case HeaderFields.Path:
+                    message.path = value.to_object_path()
+                case HeaderFields.Destination:
+                    message.destination = value.to_string()
+                case HeaderFields.Interface:
+                    message.interface = value.to_string()
+                case HeaderFields.Member:
+                    message.member = value.to_string()
+                case HeaderFields.ErrorName:
+                    message.error = value.to_string()
+                case HeaderFields.Signature:
+                    message.signature = value.to_signature()
+
+        return message
+
+    def _handle_method_call(self, message: _Message):
         raise NotImplementedError()
 
-    def _handle_method_return(self,
-                              serial: u32,
-                              body: bytes,
-                              header_fields: [Type]):
-        raise NotImplementedError()
+    def _handle_method_return_and_error(self, message: _Message):
+        completion = self._completions.pop(message.serial, None)
 
-    def _handle_error(self):
-        raise NotImplementedError()
+        if completion is None:
+            return
 
-    def _handle_signal(self):
+        completion.message = message
+        resume(completion.fiber)
+
+    def _handle_signal(self, message: _Message):
         raise NotImplementedError()
 
 def _build_header(serial: u32,
@@ -115,19 +170,23 @@ def _build_header(serial: u32,
     ]
 
 class SessionBus(Bus):
-    _handler: Handler
     _serial: u32
     _completions: {u32: _Completion}
+    _message_reader: _MessageReader
 
-    def __init__(self, handler: Handler = None):
-        self._handler = handler
+    def __init__(self):
         self._serial = 0
         self._completions = {}
+        self._message_reader = None
 
     def start(self):
         """Connect to the bus.
 
         """
+
+        self._completions.clear()
+        self._message_reader = _MessageReader(self._completions)
+        self._message_reader.start()
 
     def stop(self):
         """Disconnect from the bus once all ongoing calls have completed.
@@ -179,12 +238,24 @@ class SessionBus(Bus):
         message = marshal(header, align=8)
         message += body
 
-        completion = _Completion(current(), None, None)
+        completion = _Completion(current(), None)
         self._completions[serial] = completion
         self._write(message)
         suspend()
 
-        return completion.data
+        returned = unmarshal(completion.message.signature,
+                             completion.message.body,
+                             completion.message.big_endian)
+
+        if completion.message.type == MessageType.MethodReturn:
+            return returned
+        else:
+            if len(returned) == 0:
+                error_message = ""
+            else:
+                error_message = returned[0].to_struct()[1].to_string()
+
+            raise CallError(completion.message.error, error_message)
 
     def emit(self,
              object_path: string,
