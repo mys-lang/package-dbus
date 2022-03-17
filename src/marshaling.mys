@@ -384,20 +384,20 @@ def _get_alignment(value: Type) -> i64:
             raise UnreachableError()
 
 def _marshal_array(value: Array, writer: Writer):
-    size_pos = writer.get_pos()
-    writer.write_u32(0)
-    data_pos = -1
+    values = value.to_array()
 
-    for item in value.to_array():
-        writer.align(_get_alignment(item))
+    if len(values) == 0:
+        writer.write_u32(0)
+    else:
+        size_pos = writer.get_pos()
+        writer.write_u32(0)
+        writer.align(_get_alignment(values[0]))
+        items_pos = writer.get_pos()
 
-        if data_pos == -1:
-            data_pos = writer.get_pos()
+        for item in values:
+            _marshal(item, writer)
 
-        _marshal(item, writer)
-
-    if data_pos != -1:
-        data_size = writer.get_pos() - data_pos
+        data_size = writer.get_pos() - items_pos
         writer.write_u32_at(size_pos, u32(data_size))
 
 def _marshal_struct(value: Struct, writer: Writer):
