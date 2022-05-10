@@ -4,52 +4,52 @@ class WrongTypeError(Error):
 @trait
 class Type:
 
-    def to_byte(self) -> u8:
+    func to_byte(self) -> u8:
         raise WrongTypeError()
 
-    def to_boolean(self) -> bool:
+    func to_boolean(self) -> bool:
         raise WrongTypeError()
 
-    def to_int16(self) -> i16:
+    func to_int16(self) -> i16:
         raise WrongTypeError()
 
-    def to_uint16(self) -> u16:
+    func to_uint16(self) -> u16:
         raise WrongTypeError()
 
-    def to_int32(self) -> i32:
+    func to_int32(self) -> i32:
         raise WrongTypeError()
 
-    def to_uint32(self) -> u32:
+    func to_uint32(self) -> u32:
         raise WrongTypeError()
 
-    def to_int64(self) -> i64:
+    func to_int64(self) -> i64:
         raise WrongTypeError()
 
-    def to_uint64(self) -> u64:
+    func to_uint64(self) -> u64:
         raise WrongTypeError()
 
-    def to_double(self) -> f64:
+    func to_double(self) -> f64:
         raise WrongTypeError()
 
-    def to_string(self) -> string:
+    func to_string(self) -> string:
         raise WrongTypeError()
 
-    def to_object_path(self) -> string:
+    func to_object_path(self) -> string:
         raise WrongTypeError()
 
-    def to_signature(self) -> string:
+    func to_signature(self) -> string:
         raise WrongTypeError()
 
-    def to_array(self) -> [Type]:
+    func to_array(self) -> [Type]:
         raise WrongTypeError()
 
-    def to_struct(self) -> [Type]:
+    func to_struct(self) -> [Type]:
         raise WrongTypeError()
 
-    def to_dict(self) -> {Type: Type}:
+    func to_dict(self) -> {Type: Type}:
         raise WrongTypeError()
 
-    def to_variant(self) -> (string, Type):
+    func to_variant(self) -> (string, Type):
         raise WrongTypeError()
 
 class Byte(Type):
@@ -59,7 +59,7 @@ class Byte(Type):
 
     value: u8
 
-    def to_byte(self) -> u8:
+    func to_byte(self) -> u8:
         return self.value
 
 class Boolean(Type):
@@ -69,7 +69,7 @@ class Boolean(Type):
 
     value: bool
 
-    def to_boolean(self) -> bool:
+    func to_boolean(self) -> bool:
         return self.value
 
 class Int16(Type):
@@ -79,7 +79,7 @@ class Int16(Type):
 
     value: i16
 
-    def to_int16(self) -> i16:
+    func to_int16(self) -> i16:
         return self.value
 
 class Uint16(Type):
@@ -89,7 +89,7 @@ class Uint16(Type):
 
     value: u16
 
-    def to_uint16(self) -> u16:
+    func to_uint16(self) -> u16:
         return self.value
 
 class Int32(Type):
@@ -99,7 +99,7 @@ class Int32(Type):
 
     value: i32
 
-    def to_int32(self) -> i32:
+    func to_int32(self) -> i32:
         return self.value
 
 class Uint32(Type):
@@ -109,7 +109,7 @@ class Uint32(Type):
 
     value: u32
 
-    def to_uint32(self) -> u32:
+    func to_uint32(self) -> u32:
         return self.value
 
 class Int64(Type):
@@ -119,7 +119,7 @@ class Int64(Type):
 
     value: i64
 
-    def to_int64(self) -> i64:
+    func to_int64(self) -> i64:
         return self.value
 
 class Uint64(Type):
@@ -129,7 +129,7 @@ class Uint64(Type):
 
     value: u64
 
-    def to_uint64(self) -> u64:
+    func to_uint64(self) -> u64:
         return self.value
 
 class Double(Type):
@@ -139,7 +139,7 @@ class Double(Type):
 
     value: f64
 
-    def to_double(self) -> f64:
+    func to_double(self) -> f64:
         return self.value
 
 class String(Type):
@@ -149,7 +149,7 @@ class String(Type):
 
     value: string
 
-    def to_string(self) -> string:
+    func to_string(self) -> string:
         return self.value
 
 class UnixFd(Type):
@@ -164,7 +164,7 @@ class ObjectPath(Type):
 
     value: string
 
-    def to_object_path(self) -> string:
+    func to_object_path(self) -> string:
         return self.value
 
 class Signature(Type):
@@ -174,7 +174,7 @@ class Signature(Type):
 
     value: string
 
-    def to_signature(self) -> string:
+    func to_signature(self) -> string:
         return self.value
 
 class Array(Type):
@@ -184,7 +184,7 @@ class Array(Type):
 
     value: [Type]
 
-    def to_array(self) -> [Type]:
+    func to_array(self) -> [Type]:
         return self.value
 
 class Struct(Type):
@@ -194,7 +194,7 @@ class Struct(Type):
 
     value: [Type]
 
-    def to_struct(self) -> [Type]:
+    func to_struct(self) -> [Type]:
         return self.value
 
 class Dict(Type):
@@ -204,7 +204,7 @@ class Dict(Type):
 
     value: {Type: Type}
 
-    def to_dict(self) -> {Type: Type}:
+    func to_dict(self) -> {Type: Type}:
         return self.value
 
 class Variant(Type):
@@ -215,5 +215,5 @@ class Variant(Type):
     signature: string
     value: Type
 
-    def to_variant(self) -> (string, Type):
+    func to_variant(self) -> (string, Type):
         return (self.signature, self.value)

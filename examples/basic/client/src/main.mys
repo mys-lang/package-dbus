@@ -8,10 +8,10 @@ from .dbus_basic_client import BasicObject
 
 class BasicDemo(BasicDemoInterface):
 
-    def count(self, value: i64):
+    func count(self, value: i64):
         print(f"Count: {value}")
 
-def main(argv: [string]):
+func main(argv: [string]):
     parser = Parser()
     parser.add_option("--exit")
     args = parser.parse(argv)

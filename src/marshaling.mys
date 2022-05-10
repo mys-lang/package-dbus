@@ -16,7 +16,7 @@ from .types import Uint32
 from .types import Uint64
 from .types import Variant
 
-def marshal(values: [Type], big_endian: bool = True, align: i64 = 1) -> bytes:
+func marshal(values: [Type], big_endian: bool = True, align: i64 = 1) -> bytes:
     """Marshal given values.
 
     """
@@ -30,7 +30,7 @@ def marshal(values: [Type], big_endian: bool = True, align: i64 = 1) -> bytes:
 
     return writer.finalize()
 
-def unmarshal(signature: string,
+func unmarshal(signature: string,
               data: bytes,
               big_endian: bool = True) -> [Type]:
     """Unmarshal given data using given signature.
@@ -53,35 +53,35 @@ class SignatureReader:
     _signature: string
     _pos: i64
 
-    def __init__(self, signature: string):
+    func __init__(self, signature: string):
         self._signature = signature
         self._pos = 0
 
-    def get(self) -> char:
+    func get(self) -> char:
         value = self.peek()
         self._pos += 1
 
         return value
 
-    def peek(self) -> char:
+    func peek(self) -> char:
         if not self.available():
             raise MarshalingError("Out of signature characters.")
 
         return self._signature[self._pos]
 
-    def available(self) -> bool:
+    func available(self) -> bool:
         return self._pos < i64(len(self._signature))
 
-    def tell(self) -> i64:
+    func tell(self) -> i64:
         return self._pos
 
-    def seek(self, pos: i64):
+    func seek(self, pos: i64):
         self._pos = pos
 
-    def skip_single_complete_type(self):
+    func skip_single_complete_type(self):
         self._skip_single_complete_type()
 
-    def _skip_single_complete_type(self):
+    func _skip_single_complete_type(self):
         match self.get():
             case 'y':
                 pass
@@ -130,15 +130,15 @@ class Reader:
     _pos: i64
     _big_endian: bool
 
-    def __init__(self, data: bytes, big_endian: bool):
+    func __init__(self, data: bytes, big_endian: bool):
         self._data = data
         self._pos = 0
         self._big_endian = big_endian
 
-    def available(self) -> bool:
+    func available(self) -> bool:
         return self._pos < i64(len(self._data))
 
-    def read_u8(self) -> u8:
+    func read_u8(self) -> u8:
         if not self.available():
             raise MarshalingError("Out of data.")
 
@@ -147,10 +147,10 @@ class Reader:
 
         return value
 
-    def read_i16(self) -> i16:
+    func read_i16(self) -> i16:
         return i16(self.read_u16())
 
-    def read_u16(self) -> u16:
+    func read_u16(self) -> u16:
         self.align(2)
 
         if self._big_endian:
@@ -162,10 +162,10 @@ class Reader:
 
         return value
 
-    def read_i32(self) -> i32:
+    func read_i32(self) -> i32:
         return i32(self.read_u32())
 
-    def read_u32(self) -> u32:
+    func read_u32(self) -> u32:
         self.align(4)
 
         if self._big_endian:
@@ -177,10 +177,10 @@ class Reader:
 
         return value
 
-    def read_i64(self) -> i64:
+    func read_i64(self) -> i64:
         return i64(self.read_u64())
 
-    def read_u64(self) -> u64:
+    func read_u64(self) -> u64:
         self.align(8)
 
         if self._big_endian:
@@ -192,14 +192,14 @@ class Reader:
 
         return value
 
-    def read_f64(self) -> f64:
+    func read_f64(self) -> f64:
         value: f64 = 0.0
         value_u64 = self.read_u64()
         c"value = *((f64 *)(&value_u64));"
 
         return value
 
-    def read_string(self) -> string:
+    func read_string(self) -> string:
         length = self.read_u32()
         value = b""
 
@@ -210,7 +210,7 @@ class Reader:
 
         return string(value)
 
-    def read_signature(self) -> string:
+    func read_signature(self) -> string:
         length = self.read_u8()
         value = b""
 
@@ -221,14 +221,14 @@ class Reader:
 
         return string(value)
 
-    def align(self, alignment: i64):
+    func align(self, alignment: i64):
         rest = (self._pos % alignment)
 
         if rest > 0:
             for _ in range(alignment - rest):
                 self.read_u8()
 
-    def tell(self) -> i64:
+    func tell(self) -> i64:
         return self._pos
 
 class Writer:
@@ -236,19 +236,19 @@ class Writer:
     _pos: i64
     _big_endian: bool
 
-    def __init__(self, big_endian: bool):
+    func __init__(self, big_endian: bool):
         self._data = b""
         self._pos = 0
         self._big_endian = big_endian
 
-    def write_u8(self, value: u8):
+    func write_u8(self, value: u8):
         self._data += value
         self._pos += 1
 
-    def write_i16(self, value: i16):
+    func write_i16(self, value: i16):
         self.write_u16(u16(value))
 
-    def write_u16(self, value: u16):
+    func write_u16(self, value: u16):
         self.align(2)
 
         if self._big_endian:
@@ -258,10 +258,10 @@ class Writer:
             self.write_u8(u8(value >> 0))
             self.write_u8(u8(value >> 8))
 
-    def write_i32(self, value: i32):
+    func write_i32(self, value: i32):
         self.write_u32(u32(value))
 
-    def write_u32(self, value: u32):
+    func write_u32(self, value: u32):
         self.align(4)
 
         if self._big_endian:
@@ -275,7 +275,7 @@ class Writer:
             self.write_u8(u8(value >> 16))
             self.write_u8(u8(value >> 24))
 
-    def write_u32_at(self, pos: i64, value: u32):
+    func write_u32_at(self, pos: i64, value: u32):
         if self._big_endian:
             self._data[pos] = u8(value >> 24)
             self._data[pos + 1] = u8(value >> 16)
@@ -287,10 +287,10 @@ class Writer:
             self._data[pos + 2] = u8(value >> 16)
             self._data[pos + 3] = u8(value >> 24)
 
-    def write_i64(self, value: i64):
+    func write_i64(self, value: i64):
         self.write_u64(u64(value))
 
-    def write_u64(self, value: u64):
+    func write_u64(self, value: u64):
         self.align(8)
 
         if self._big_endian:
@@ -312,12 +312,12 @@ class Writer:
             self.write_u8(u8(value >> 48))
             self.write_u8(u8(value >> 56))
 
-    def write_f64(self, value: f64):
+    func write_f64(self, value: f64):
         value_u64: u64 = 0
         c"value_u64 = *((u64 *)(&value));"
         self.write_u64(value_u64)
 
-    def write_string(self, value: string):
+    func write_string(self, value: string):
         utf8 = value.to_utf8()
         self.write_u32(u32(len(utf8)))
 
@@ -326,7 +326,7 @@ class Writer:
 
         self.write_u8(0)
 
-    def write_signature(self, value: string):
+    func write_signature(self, value: string):
         utf8 = value.to_utf8()
         self.write_u8(u8(len(utf8)))
 
@@ -335,20 +335,20 @@ class Writer:
 
         self.write_u8(0)
 
-    def get_pos(self) -> i64:
+    func get_pos(self) -> i64:
         return self._pos
 
-    def align(self, alignment: i64):
+    func align(self, alignment: i64):
         rest = (self._pos % alignment)
 
         if rest > 0:
             for _ in range(alignment - rest):
                 self.write_u8(0)
 
-    def finalize(self) -> bytes:
+    func finalize(self) -> bytes:
         return self._data
 
-def _get_alignment(value: Type) -> i64:
+func _get_alignment(value: Type) -> i64:
     match value:
         case Byte():
             return 1
@@ -383,7 +383,7 @@ def _get_alignment(value: Type) -> i64:
         case _:
             raise UnreachableError()
 
-def _marshal_array(value: Array, writer: Writer):
+func _marshal_array(value: Array, writer: Writer):
     values = value.to_array()
 
     if len(values) == 0:
@@ -400,20 +400,20 @@ def _marshal_array(value: Array, writer: Writer):
         data_size = writer.get_pos() - items_pos
         writer.write_u32_at(size_pos, u32(data_size))
 
-def _marshal_struct(value: Struct, writer: Writer):
+func _marshal_struct(value: Struct, writer: Writer):
     writer.align(8)
 
     for item in value.to_struct():
         _marshal(item, writer)
 
-def _marshal_dict(value: Dict, writer: Writer):
+func _marshal_dict(value: Dict, writer: Writer):
     _marshal_array(Array([Struct([k, v]) for k, v in value.to_dict()]), writer)
 
-def _marshal_variant(value: Variant, writer: Writer):
+func _marshal_variant(value: Variant, writer: Writer):
     _marshal(Signature(value.signature), writer)
     _marshal(value.value, writer)
 
-def _marshal(value: Type, writer: Writer):
+func _marshal(value: Type, writer: Writer):
     match value:
         case Byte() as byte:
             writer.write_u8(byte.value)
@@ -450,7 +450,7 @@ def _marshal(value: Type, writer: Writer):
         case _:
             raise UnreachableError()
 
-def _unmarshal_array(signature_reader: SignatureReader, reader: Reader) -> Array:
+func _unmarshal_array(signature_reader: SignatureReader, reader: Reader) -> Array:
     item_pos = signature_reader.tell()
     end = i64(reader.read_u32()) + reader.tell()
     values = []
@@ -463,7 +463,7 @@ def _unmarshal_array(signature_reader: SignatureReader, reader: Reader) -> Array
 
     return Array(values)
 
-def _unmarshal_struct(signature_reader: SignatureReader, reader: Reader) -> Struct:
+func _unmarshal_struct(signature_reader: SignatureReader, reader: Reader) -> Struct:
     reader.align(8)
     values = []
 
@@ -474,13 +474,13 @@ def _unmarshal_struct(signature_reader: SignatureReader, reader: Reader) -> Stru
 
     return Struct(values)
 
-def _unmarshal_variant(reader: Reader) -> Variant:
+func _unmarshal_variant(reader: Reader) -> Variant:
     signature = reader.read_signature()
     value = _unmarshal(SignatureReader(signature), reader)
 
     return Variant(signature, value)
 
-def _unmarshal_dict(signature_reader: SignatureReader, reader: Reader) -> Dict:
+func _unmarshal_dict(signature_reader: SignatureReader, reader: Reader) -> Dict:
     item_pos = signature_reader.tell()
     end = i64(reader.read_u32()) + reader.tell()
     values: {Type: Type} = {}
@@ -500,7 +500,7 @@ def _unmarshal_dict(signature_reader: SignatureReader, reader: Reader) -> Dict:
 
     return Dict(values)
 
-def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
+func _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
     match signature_reader.get():
         case 'y':
             return Byte(reader.read_u8())
@@ -537,10 +537,10 @@ def _unmarshal(signature_reader: SignatureReader, reader: Reader) -> Type:
         case _ as ch:
             raise MarshalingError(f"Unexpectd signature character '{ch}'.")
 
-def _marshal_pack_list(value: Type, big_endian: bool = True) -> bytes:
+func _marshal_pack_list(value: Type, big_endian: bool = True) -> bytes:
     return marshal([value], big_endian)
 
-def _unmarshal_unpack_list(signature: string,
+func _unmarshal_unpack_list(signature: string,
                            data: bytes,
                            big_endian: bool = True) -> Type:
     value = unmarshal(signature, data, big_endian)
@@ -549,70 +549,70 @@ def _unmarshal_unpack_list(signature: string,
     return value[0]
 
 @test
-def test_marshal_byte():
+func test_marshal_byte():
     assert _marshal_pack_list(Byte(0x34)) == b"\x34"
 
 @test
-def test_unmarshal_byte():
+func test_unmarshal_byte():
     assert _unmarshal_unpack_list("y", b"\x34").to_byte() == 0x34
 
 @test
-def test_marshal_boolean():
+func test_marshal_boolean():
     assert _marshal_pack_list(Boolean(False)) == b"\x00\x00\x00\x00"
     assert _marshal_pack_list(Boolean(True)) == b"\x00\x00\x00\x01"
 
 @test
-def test_unmarshal_boolean():
+func test_unmarshal_boolean():
     assert not _unmarshal_unpack_list("b", b"\x00\x00\x00\x00").to_boolean()
     assert _unmarshal_unpack_list("b", b"\x00\x00\x00\x01").to_boolean()
 
 @test
-def test_marshal_int16():
+func test_marshal_int16():
     assert _marshal_pack_list(Int16(0x1234)) == b"\x12\x34"
     assert _marshal_pack_list(Int16(-2)) == b"\xff\xfe"
 
 @test
-def test_unmarshal_int16():
+func test_unmarshal_int16():
     assert _unmarshal_unpack_list("n", b"\x12\x34").to_int16() == 0x1234
     assert _unmarshal_unpack_list("n", b"\xff\xfe").to_int16() == -2
 
 @test
-def test_marshal_uint16():
+func test_marshal_uint16():
     assert _marshal_pack_list(Uint16(0x1234)) == b"\x12\x34"
     assert _marshal_pack_list(Uint16(0x1234), False) == b"\x34\x12"
 
 @test
-def test_unmarshal_uint16():
+func test_unmarshal_uint16():
     assert _unmarshal_unpack_list("q", b"\x12\x34").to_uint16() == 0x1234
     assert _unmarshal_unpack_list("q", b"\x34\x12", False).to_uint16() == 0x1234
 
 @test
-def test_marshal_int32():
+func test_marshal_int32():
     assert _marshal_pack_list(Int32(0x12345678)) == b"\x12\x34\x56\x78"
     assert _marshal_pack_list(Int32(-2)) == b"\xff\xff\xff\xfe"
 
 @test
-def test_unmarshal_int32():
+func test_unmarshal_int32():
     assert _unmarshal_unpack_list("i", b"\x12\x34\x56\x78").to_int32() == 0x12345678
     assert _unmarshal_unpack_list("i", b"\xff\xff\xff\xfe").to_int32() == -2
 
 @test
-def test_marshal_uint32():
+func test_marshal_uint32():
     assert _marshal_pack_list(Uint32(0x12345678)) == b"\x12\x34\x56\x78"
     assert _marshal_pack_list(Uint32(0x12345678), False) == b"\x78\x56\x34\x12"
 
 @test
-def test_unmarshal_uint32():
+func test_unmarshal_uint32():
     assert _unmarshal_unpack_list("u", b"\x12\x34\x56\x78").to_uint32() == 0x12345678
 
 @test
-def test_marshal_int64():
+func test_marshal_int64():
     assert _marshal_pack_list(Int64(0x12345678abcdef)) == (
         b"\x00\x12\x34\x56\x78\xab\xcd\xef")
     assert _marshal_pack_list(Int64(-2)) == b"\xff\xff\xff\xff\xff\xff\xff\xfe"
 
 @test
-def test_unmarshal_int64():
+func test_unmarshal_int64():
     assert _unmarshal_unpack_list(
         "x",
         b"\x00\x12\x34\x56\x78\xab\xcd\xef").to_int64() == 0x12345678abcdef
@@ -621,14 +621,14 @@ def test_unmarshal_int64():
         b"\xff\xff\xff\xff\xff\xff\xff\xfe").to_int64() == -2
 
 @test
-def test_marshal_uint64():
+func test_marshal_uint64():
     assert _marshal_pack_list(Uint64(0x12345678abcdef)) == (
         b"\x00\x12\x34\x56\x78\xab\xcd\xef")
     assert _marshal_pack_list(Uint64(0x12345678abcdef), False) == (
         b"\xef\xcd\xab\x78\x56\x34\x12\x00")
 
 @test
-def test_unmarshal_uint64():
+func test_unmarshal_uint64():
     assert _unmarshal_unpack_list(
         "t",
         b"\x00\x12\x34\x56\x78\xab\xcd\xef").to_uint64() == 0x12345678abcdef
@@ -638,13 +638,13 @@ def test_unmarshal_uint64():
         False).to_uint64() == 0x12345678abcdef
 
 @test
-def test_marshal_double():
+func test_marshal_double():
     assert _marshal_pack_list(Double(0.0)) == b"\x00\x00\x00\x00\x00\x00\x00\x00"
     assert _marshal_pack_list(Double(1.0)) == b"\x3f\xf0\x00\x00\x00\x00\x00\x00"
     assert _marshal_pack_list(Double(125.6)) == b"\x40\x5f\x66\x66\x66\x66\x66\x66"
 
 @test
-def test_unmarshal_double():
+func test_unmarshal_double():
     assert _unmarshal_unpack_list(
         "d",
         b"\x00\x00\x00\x00\x00\x00\x00\x00").to_double() == 0.0
@@ -656,39 +656,39 @@ def test_unmarshal_double():
         b"\x40\x5f\x66\x66\x66\x66\x66\x66").to_double() == 125.6
 
 @test
-def test_marshal_string():
+func test_marshal_string():
     assert _marshal_pack_list(String("")) == b"\x00\x00\x00\x00\x00"
     assert _marshal_pack_list(String("foo")) == b"\x00\x00\x00\x03\x66\x6f\x6f\x00"
 
 @test
-def test_unmarshal_string():
+func test_unmarshal_string():
     assert _unmarshal_unpack_list("s", b"\x00\x00\x00\x00\x00").to_string() == ""
     assert _unmarshal_unpack_list(
         "s",
         b"\x00\x00\x00\x03\x66\x6f\x6f\x00").to_string() == "foo"
 
 @test
-def test_marshal_object_path():
+func test_marshal_object_path():
     assert _marshal_pack_list(ObjectPath("/Example")) == (
         b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00")
 
 @test
-def test_unmarshal_object_path():
+func test_unmarshal_object_path():
     assert _unmarshal_unpack_list(
         "o",
         b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00"
     ).to_object_path() == "/Example"
 
 @test
-def test_marshal_signature():
+func test_marshal_signature():
     assert _marshal_pack_list(Signature("usi")) == b"\x03\x75\x73\x69\x00"
 
 @test
-def test_unmarshal_signature():
+func test_unmarshal_signature():
     assert _unmarshal_unpack_list("g", b"\x03\x75\x73\x69\x00").to_signature() == "usi"
 
 @test
-def test_marshal_array_int64():
+func test_marshal_array_int64():
     assert _marshal_pack_list(Array([Int64(5)])) == (
         b"\x00\x00\x00\x08"
         b"\x00\x00\x00\x00"
@@ -700,7 +700,7 @@ def test_marshal_array_int64():
         b"\x00\x00\x00\x00\x00\x00\x00\x07")
 
 @test
-def test_unmarshal_array_int64():
+func test_unmarshal_array_int64():
     values = _unmarshal_unpack_list("ax",
                                     b"\x00\x00\x00\x08"
                                     b"\x00\x00\x00\x00"
@@ -718,14 +718,14 @@ def test_unmarshal_array_int64():
     assert values[1].to_int64() == 7
 
 @test
-def test_marshal_array_int32():
+func test_marshal_array_int32():
     assert _marshal_pack_list(Array([Int32(5), Int32(7)])) == (
         b"\x00\x00\x00\x08"
         b"\x00\x00\x00\x05"
         b"\x00\x00\x00\x07")
 
 @test
-def test_unmarshal_array_int32():
+func test_unmarshal_array_int32():
     values = _unmarshal_unpack_list("ai",
                                     b"\x00\x00\x00\x08"
                                     b"\x00\x00\x00\x05"
@@ -735,7 +735,7 @@ def test_unmarshal_array_int32():
     assert values[1].to_int32() == 7
 
 @test
-def test_marshal_struct_header():
+func test_marshal_struct_header():
     header = Struct([
         Byte(0x42),
         Byte(1),
@@ -749,7 +749,7 @@ def test_marshal_struct_header():
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
 @test
-def test_unmarshal_struct_header():
+func test_unmarshal_struct_header():
     values = unmarshal(
         "(yyyyuua(yv))",
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
@@ -766,7 +766,7 @@ def test_unmarshal_struct_header():
     assert len(values[6].to_array()) == 0
 
 @test
-def test_marshal_header():
+func test_marshal_header():
     header: [Type] = [
         Byte(0x42),
         Byte(1),
@@ -780,7 +780,7 @@ def test_marshal_header():
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
 @test
-def test_unmarshal_header():
+func test_unmarshal_header():
     values = unmarshal(
         "yyyyuua(yv)",
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
@@ -795,12 +795,12 @@ def test_unmarshal_header():
     assert len(values[6].to_array()) == 0
 
 @test
-def test_marshal_variant():
+func test_marshal_variant():
     assert _marshal_pack_list(Variant("i", Int32(5))) == (
         b"\x01\x69\x00\x00\x00\x00\x00\x05")
 
 @test
-def test_unmarshal_variant():
+func test_unmarshal_variant():
     signature, value = _unmarshal_unpack_list(
         "v",
         b"\x01\x69\x00\x00\x00\x00\x00\x05").to_variant()
@@ -808,7 +808,7 @@ def test_unmarshal_variant():
     assert value.to_int32() == 5
 
 @test
-def test_marshal_dict():
+func test_marshal_dict():
     value = Dict({String("foo"): String("1"),
                   String("bar"): String("2")})
     marshalled = _marshal_pack_list(value)
@@ -825,7 +825,7 @@ def test_marshal_dict():
     assert marshalled in [foo_before_bar, bar_before_foo]
 
 @test
-def test_unmarshal_dict():
+func test_unmarshal_dict():
     items = _unmarshal_unpack_list(
         "{ss}",
         b"\x00\x00\x00\x1e"
@@ -842,7 +842,7 @@ def test_unmarshal_dict():
             raise AssertionError()
 
 @test
-def test_marshal_name_acquire():
+func test_marshal_name_acquire():
     # Header.
     marshalled = marshal([
         Byte(0x4b),
@@ -893,7 +893,7 @@ def test_marshal_name_acquire():
     assert marshalled == b"\x00\x00\x00\x06:1.572\x00"
 
 @test
-def test_unmarshal_name_acquire():
+func test_unmarshal_name_acquire():
     # Header.
     values = unmarshal("yyyyuua(yv)",
                        b"\x4b\x04\x01\x01" b"\x00\x00\x00\x0b" b"\x00\x00\x00\x02"
@@ -970,7 +970,7 @@ def test_unmarshal_name_acquire():
     assert values[0].to_string() == ":1.572"
 
 @test
-def test_unmarshal_out_of_signature_characters():
+func test_unmarshal_out_of_signature_characters():
     try:
         unmarshal("a", b"\x00\x00\x00\x00")
         message = ""
@@ -980,7 +980,7 @@ def test_unmarshal_out_of_signature_characters():
     assert message == "Out of signature characters."
 
 @test
-def test_unmarshal_out_of_data():
+func test_unmarshal_out_of_data():
     try:
         unmarshal("i", b"\x00\x00\x00")
         message = ""

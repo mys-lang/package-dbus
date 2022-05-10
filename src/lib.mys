@@ -52,7 +52,7 @@ class _Message:
     signature: string
     error_name: string
 
-    def __init__(self,
+    func __init__(self,
                  big_endian: bool,
                  type: MessageType,
                  serial: u32,
@@ -70,10 +70,10 @@ class _Message:
 class _MessageReader(Fiber):
     _completions: {u32: _Completion}
 
-    def __init__(self, completions: {u32: _Completion}):
+    func __init__(self, completions: {u32: _Completion}):
         self._completions = completions
 
-    def run(self):
+    func run(self):
         while True:
             message = self._read_message()
 
@@ -87,10 +87,10 @@ class _MessageReader(Fiber):
                 case MessageType.Signal:
                     self._handle_signal(message)
 
-    def _read(self, size: u32) -> bytes:
+    func _read(self, size: u32) -> bytes:
         raise NotImplementedError()
 
-    def _read_message(self) -> _Message:
+    func _read_message(self) -> _Message:
         data = self._read(16)
 
         if data[3] != _PROTOCOL_VERSION:
@@ -140,10 +140,10 @@ class _MessageReader(Fiber):
 
         return message
 
-    def _handle_method_call(self, message: _Message):
+    func _handle_method_call(self, message: _Message):
         raise NotImplementedError()
 
-    def _handle_method_return_and_error(self, message: _Message):
+    func _handle_method_return_and_error(self, message: _Message):
         completion = self._completions.pop(message.serial, None)
 
         if completion is None:
@@ -152,10 +152,10 @@ class _MessageReader(Fiber):
         completion.message = message
         resume(completion.fiber)
 
-    def _handle_signal(self, message: _Message):
+    func _handle_signal(self, message: _Message):
         raise NotImplementedError()
 
-def _build_header(serial: u32,
+func _build_header(serial: u32,
                   message_type: MessageType,
                   body: bytes,
                   header_fields: [Type]) -> [Type]:
@@ -174,12 +174,12 @@ class SessionBus(Bus):
     _completions: {u32: _Completion}
     _message_reader: _MessageReader
 
-    def __init__(self):
+    func __init__(self):
         self._serial = 0
         self._completions = {}
         self._message_reader = None
 
-    def start(self):
+    func start(self):
         """Connect to the bus.
 
         """
@@ -188,30 +188,30 @@ class SessionBus(Bus):
         self._message_reader = _MessageReader(self._completions)
         self._message_reader.start()
 
-    def stop(self):
+    func stop(self):
         """Disconnect from the bus once all ongoing calls have completed.
 
         """
 
-    def join(self):
+    func join(self):
         """Wait for the bus to be stopped.
 
         """
 
-    def add_object_client(self, object: ClientObject):
+    func add_object_client(self, object: ClientObject):
         """Add given client object.
 
         """
 
-    def add_object_server(self, object: ServerObject):
+    func add_object_server(self, object: ServerObject):
         """Add given server object.
 
         """
 
-    def add_signal_handler(self, handler: SignalHandler):
+    func add_signal_handler(self, handler: SignalHandler):
         pass
 
-    def call(self,
+    func call(self,
              destination: string,
              object_path: string,
              interface: string,
@@ -257,7 +257,7 @@ class SessionBus(Bus):
 
             raise CallError(completion.message.error_name, error_message)
 
-    def emit(self,
+    func emit(self,
              object_path: string,
              interface: string,
              signal: string,
@@ -283,7 +283,7 @@ class SessionBus(Bus):
 
         self._write(message)
 
-    def _next_serial(self) -> u32:
+    func _next_serial(self) -> u32:
         self._serial += 1
 
         if self._serial == 0:
@@ -291,5 +291,5 @@ class SessionBus(Bus):
 
         return self._serial
 
-    def _write(self, message: bytes):
+    func _write(self, message: bytes):
         pass

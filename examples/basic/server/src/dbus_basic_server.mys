@@ -6,40 +6,40 @@ from dbus.types import Type
 @trait
 class BasicDemoInterface:
 
-    def random(self) -> i32:
+    func random(self) -> i32:
         pass
 
-    def hello(self, name: string) -> string:
+    func hello(self, name: string) -> string:
         pass
 
-    def echo(self, input: Type) -> Type:
+    func echo(self, input: Type) -> Type:
         pass
 
-    def cat(self, file: string) -> bytes:
+    func cat(self, file: string) -> bytes:
         pass
 
-    def sum(self, ints: [i32]) -> i32:
+    func sum(self, ints: [i32]) -> i32:
         pass
 
-    def info(self) -> {string: string}:
+    func info(self) -> {string: string}:
         pass
 
-    def exit(self) -> string:
+    func exit(self) -> string:
         pass
 
 class BasicDemo:
 
-    def signal_count(self, value: i64):
+    func signal_count(self, value: i64):
         raise NotImplementedError()
 
 class BasicObject(Object):
     basic_demo: BasicDemo
 
-    def __init__(self,
+    func __init__(self,
                  bus_name: string,
                  path: string,
                  basic_demo: BasicDemoInterface):
         self.basic_demo = BasicDemo()
 
-    def signal_count(self, value: i64):
+    func signal_count(self, value: i64):
         raise NotImplementedError()

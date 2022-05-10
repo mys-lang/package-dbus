@@ -5,7 +5,7 @@ from dbus.types import Type
 
 class Handler(SignalHandler):
 
-    def on_signal(self,
+    func on_signal(self,
                   sender: string,
                   object_path: string,
                   interface: string,
@@ -13,7 +13,7 @@ class Handler(SignalHandler):
                   values: [Type]):
         print("Signal:", sender, object_path, interface, signal, values)
 
-def main():
+func main():
     bus = SessionBus()
     bus.add_signal_handler(Handler())
     bus.start()
