@@ -4,7 +4,7 @@ from dbus.types import String
 from dbus.types import Type
 from fiber import Fiber
 from fiber import sleep
-from os import BinaryFile
+from os.path import Path
 from random.pseudo import randint
 from .dbus_basic_server import BasicDemoInterface
 from .dbus_basic_server import BasicObject
@@ -24,7 +24,7 @@ class BasicDemo(BasicDemoInterface):
         return input
 
     func cat(self, path: string) -> bytes:
-        return BinaryFile(path).read()
+        return Path(path).read_binary()
 
     func sum(self, ints: [i32]) -> i32:
         return sum(ints)
