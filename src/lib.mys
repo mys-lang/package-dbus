@@ -28,12 +28,10 @@ class CallError(Error):
     error_name: string
     message: string
 
-@trait
-class SignalHandler:
+trait SignalHandler:
     pass
 
-@trait
-class Bus:
+trait Bus:
     pass
 
 class _Completion:

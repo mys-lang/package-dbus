@@ -1,8 +1,7 @@
 class WrongTypeError(Error):
     pass
 
-@trait
-class Type:
+trait Type:
 
     func to_byte(self) -> u8:
         raise WrongTypeError()

@@ -13,8 +13,7 @@ from dbus.types import Type
 from dbus.types import Uint32
 from dbus.types import Variant
 
-@trait
-class BasicDemoInterface:
+trait BasicDemoInterface:
 
     func count(self, value: i64):
         pass

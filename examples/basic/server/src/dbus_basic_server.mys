@@ -3,8 +3,7 @@
 from dbus.server import Object
 from dbus.types import Type
 
-@trait
-class BasicDemoInterface:
+trait BasicDemoInterface:
 
     func random(self) -> i32:
         pass
