@@ -70,7 +70,7 @@ class SignatureReader:
         return self._signature[self._pos]
 
     func available(self) -> bool:
-        return self._pos < i64(len(self._signature))
+        return self._pos < self._signature.length()
 
     func tell(self) -> i64:
         return self._pos
@@ -136,7 +136,7 @@ class Reader:
         self._big_endian = big_endian
 
     func available(self) -> bool:
-        return self._pos < i64(len(self._data))
+        return self._pos < self._data.length()
 
     func read_u8(self) -> u8:
         if not self.available():
@@ -319,18 +319,18 @@ class Writer:
 
     func write_string(self, value: string):
         utf8 = value.to_utf8()
-        self.write_u32(u32(len(utf8)))
+        self.write_u32(u32(utf8.length()))
 
-        for i in range(i64(len(utf8))):
+        for i in range(utf8.length()):
             self.write_u8(utf8[i])
 
         self.write_u8(0)
 
     func write_signature(self, value: string):
         utf8 = value.to_utf8()
-        self.write_u8(u8(len(utf8)))
+        self.write_u8(u8(utf8.length()))
 
-        for i in range(i64(len(utf8))):
+        for i in range(utf8.length()):
             self.write_u8(utf8[i])
 
         self.write_u8(0)
@@ -386,7 +386,7 @@ func _get_alignment(value: Type) -> i64:
 func _marshal_array(value: Array, writer: Writer):
     values = value.to_array()
 
-    if len(values) == 0:
+    if values.length() == 0:
         writer.write_u32(0)
     else:
         size_pos = writer.get_pos()
@@ -544,7 +544,7 @@ func _unmarshal_unpack_list(signature: string,
                            data: bytes,
                            big_endian: bool = True) -> Type:
     value = unmarshal(signature, data, big_endian)
-    assert len(value) == 1
+    assert value.length() == 1
 
     return value[0]
 
@@ -679,7 +679,7 @@ test unmarshal_array_int64():
                                     b"\x00\x00\x00\x08"
                                     b"\x00\x00\x00\x00"
                                     b"\x00\x00\x00\x00\x00\x00\x00\x05").to_array()
-    assert len(values) == 1
+    assert values.length() == 1
     assert values[0].to_int64() == 5
 
     values = _unmarshal_unpack_list("ax",
@@ -687,7 +687,7 @@ test unmarshal_array_int64():
                                     b"\x00\x00\x00\x00"
                                     b"\x00\x00\x00\x00\x00\x00\x00\x05"
                                     b"\x00\x00\x00\x00\x00\x00\x00\x07").to_array()
-    assert len(values) == 2
+    assert values.length() == 2
     assert values[0].to_int64() == 5
     assert values[1].to_int64() == 7
 
@@ -702,7 +702,7 @@ test unmarshal_array_int32():
                                     b"\x00\x00\x00\x08"
                                     b"\x00\x00\x00\x05"
                                     b"\x00\x00\x00\x07").to_array()
-    assert len(values) == 2
+    assert values.length() == 2
     assert values[0].to_int32() == 5
     assert values[1].to_int32() == 7
 
@@ -724,16 +724,16 @@ test unmarshal_struct_header():
         "(yyyyuua(yv))",
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
-    assert len(values) == 1
+    assert values.length() == 1
     values = values[0].to_struct()
-    assert len(values) == 7
+    assert values.length() == 7
     assert values[0].to_byte() == 0x42
     assert values[1].to_byte() == 1
     assert values[2].to_byte() == 0
     assert values[3].to_byte() == 1
     assert values[4].to_uint32() == 0
     assert values[5].to_uint32() == 3
-    assert len(values[6].to_array()) == 0
+    assert values[6].to_array().length() == 0
 
 test marshal_header():
     header: [Type] = [
@@ -753,14 +753,14 @@ test unmarshal_header():
         "yyyyuua(yv)",
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
-    assert len(values) == 7
+    assert values.length() == 7
     assert values[0].to_byte() == 0x42
     assert values[1].to_byte() == 1
     assert values[2].to_byte() == 0
     assert values[3].to_byte() == 1
     assert values[4].to_uint32() == 0
     assert values[5].to_uint32() == 3
-    assert len(values[6].to_array()) == 0
+    assert values[6].to_array().length() == 0
 
 test marshal_variant():
     assert _marshal_pack_list(Variant("i", Int32(5))) == (
@@ -872,7 +872,7 @@ test unmarshal_name_acquire():
                        b"\x07" b"\x01\x73\x00"
                        b"\x00\x00\x00\x14org.freedesktop.DBus\x00\x00\x00\x00")
 
-    assert len(values) == 7
+    assert values.length() == 7
     assert values[0].to_byte() == 0x4b
     assert values[1].to_byte() == 4
     assert values[2].to_byte() == 1
@@ -881,45 +881,45 @@ test unmarshal_name_acquire():
     assert values[5].to_uint32() == 2
 
     values = values[6].to_array()
-    assert len(values) == 6
+    assert values.length() == 6
 
     items = values[0].to_struct()
-    assert len(items) == 2
+    assert items.length() == 2
     assert items[0].to_byte() == 1
     signature, value = items[1].to_variant()
     assert signature == "o"
     assert value.to_object_path() == "/org/freedesktop/DBus"
 
     items = values[1].to_struct()
-    assert len(items) == 2
+    assert items.length() == 2
     assert items[0].to_byte() == 2
     signature, value = items[1].to_variant()
     assert signature == "s"
     assert value.to_string() == "org.freedesktop.DBus"
 
     items = values[2].to_struct()
-    assert len(items) == 2
+    assert items.length() == 2
     assert items[0].to_byte() == 3
     signature, value = items[1].to_variant()
     assert signature == "s"
     assert value.to_string() == "NameAcquired"
 
     items = values[3].to_struct()
-    assert len(items) == 2
+    assert items.length() == 2
     assert items[0].to_byte() == 6
     signature, value = items[1].to_variant()
     assert signature == "s"
     assert value.to_string() == ":1.572"
 
     items = values[4].to_struct()
-    assert len(items) == 2
+    assert items.length() == 2
     assert items[0].to_byte() == 8
     signature, value = items[1].to_variant()
     assert signature == "g"
     assert value.to_signature() == "s"
 
     items = values[5].to_struct()
-    assert len(items) == 2
+    assert items.length() == 2
     assert items[0].to_byte() == 7
     signature, value = items[1].to_variant()
     assert signature == "s"
@@ -928,7 +928,7 @@ test unmarshal_name_acquire():
     # Body.
     values = unmarshal("s", b"\x00\x00\x00\x06:1.572\x00")
 
-    assert len(values) == 1
+    assert values.length() == 1
     assert values[0].to_string() == ":1.572"
 
 test unmarshal_out_of_signature_characters():
