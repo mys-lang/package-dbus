@@ -162,7 +162,7 @@ func _build_header(serial: u32,
         Byte(u8(message_type)),
         Byte(0),
         Byte(_PROTOCOL_VERSION),
-        Uint32(u32(len(body))),
+        Uint32(u32(body.length())),
         Uint32(serial),
         Array(header_fields)
     ]
@@ -248,7 +248,7 @@ class SessionBus(Bus):
         if completion.message.type == MessageType.MethodReturn:
             return returned
         else:
-            if len(returned) == 0:
+            if returned.length() == 0:
                 error_message = ""
             else:
                 error_message = returned[0].to_struct()[1].to_string()
