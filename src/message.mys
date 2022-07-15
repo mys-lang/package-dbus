@@ -1,13 +1,11 @@
-@enum(u8)
-class Type:
+enum Type(u8):
     Invalid = 0
     MethodCall = 1
     MethodReturn = 2
     Error = 3
     Signal = 4
 
-@enum(u8)
-class HeaderFields:
+enum HeaderFields(u8):
     Invalid = 0
     Path = 1
     Interface = 2

@@ -548,71 +548,57 @@ func _unmarshal_unpack_list(signature: string,
 
     return value[0]
 
-@test
-func test_marshal_byte():
+test marshal_byte():
     assert _marshal_pack_list(Byte(0x34)) == b"\x34"
 
-@test
-func test_unmarshal_byte():
+test unmarshal_byte():
     assert _unmarshal_unpack_list("y", b"\x34").to_byte() == 0x34
 
-@test
-func test_marshal_boolean():
+test marshal_boolean():
     assert _marshal_pack_list(Boolean(False)) == b"\x00\x00\x00\x00"
     assert _marshal_pack_list(Boolean(True)) == b"\x00\x00\x00\x01"
 
-@test
-func test_unmarshal_boolean():
+test unmarshal_boolean():
     assert not _unmarshal_unpack_list("b", b"\x00\x00\x00\x00").to_boolean()
     assert _unmarshal_unpack_list("b", b"\x00\x00\x00\x01").to_boolean()
 
-@test
-func test_marshal_int16():
+test marshal_int16():
     assert _marshal_pack_list(Int16(0x1234)) == b"\x12\x34"
     assert _marshal_pack_list(Int16(-2)) == b"\xff\xfe"
 
-@test
-func test_unmarshal_int16():
+test unmarshal_int16():
     assert _unmarshal_unpack_list("n", b"\x12\x34").to_int16() == 0x1234
     assert _unmarshal_unpack_list("n", b"\xff\xfe").to_int16() == -2
 
-@test
-func test_marshal_uint16():
+test marshal_uint16():
     assert _marshal_pack_list(Uint16(0x1234)) == b"\x12\x34"
     assert _marshal_pack_list(Uint16(0x1234), False) == b"\x34\x12"
 
-@test
-func test_unmarshal_uint16():
+test unmarshal_uint16():
     assert _unmarshal_unpack_list("q", b"\x12\x34").to_uint16() == 0x1234
     assert _unmarshal_unpack_list("q", b"\x34\x12", False).to_uint16() == 0x1234
 
-@test
-func test_marshal_int32():
+test marshal_int32():
     assert _marshal_pack_list(Int32(0x12345678)) == b"\x12\x34\x56\x78"
     assert _marshal_pack_list(Int32(-2)) == b"\xff\xff\xff\xfe"
 
-@test
-func test_unmarshal_int32():
+test unmarshal_int32():
     assert _unmarshal_unpack_list("i", b"\x12\x34\x56\x78").to_int32() == 0x12345678
     assert _unmarshal_unpack_list("i", b"\xff\xff\xff\xfe").to_int32() == -2
 
-@test
-func test_marshal_uint32():
+test marshal_uint32():
     assert _marshal_pack_list(Uint32(0x12345678)) == b"\x12\x34\x56\x78"
     assert _marshal_pack_list(Uint32(0x12345678), False) == b"\x78\x56\x34\x12"
 
-@test
-func test_unmarshal_uint32():
+test unmarshal_uint32():
     assert _unmarshal_unpack_list("u", b"\x12\x34\x56\x78").to_uint32() == 0x12345678
 
-@test
-func test_marshal_int64():
+test marshal_int64():
     assert _marshal_pack_list(Int64(0x12345678abcdef)) == (
         b"\x00\x12\x34\x56\x78\xab\xcd\xef")
     assert _marshal_pack_list(Int64(-2)) == b"\xff\xff\xff\xff\xff\xff\xff\xfe"
 
-@test
-func test_unmarshal_int64():
+test unmarshal_int64():
     assert _unmarshal_unpack_list(
         "x",
         b"\x00\x12\x34\x56\x78\xab\xcd\xef").to_int64() == 0x12345678abcdef
@@ -620,15 +606,13 @@ func test_unmarshal_int64():
         "x",
         b"\xff\xff\xff\xff\xff\xff\xff\xfe").to_int64() == -2
 
-@test
-func test_marshal_uint64():
+test marshal_uint64():
     assert _marshal_pack_list(Uint64(0x12345678abcdef)) == (
         b"\x00\x12\x34\x56\x78\xab\xcd\xef")
     assert _marshal_pack_list(Uint64(0x12345678abcdef), False) == (
         b"\xef\xcd\xab\x78\x56\x34\x12\x00")
 
-@test
-func test_unmarshal_uint64():
+test unmarshal_uint64():
     assert _unmarshal_unpack_list(
         "t",
         b"\x00\x12\x34\x56\x78\xab\xcd\xef").to_uint64() == 0x12345678abcdef
@@ -637,14 +621,12 @@ func test_unmarshal_uint64():
         b"\xef\xcd\xab\x78\x56\x34\x12\x00",
         False).to_uint64() == 0x12345678abcdef
 
-@test
-func test_marshal_double():
+test marshal_double():
     assert _marshal_pack_list(Double(0.0)) == b"\x00\x00\x00\x00\x00\x00\x00\x00"
     assert _marshal_pack_list(Double(1.0)) == b"\x3f\xf0\x00\x00\x00\x00\x00\x00"
     assert _marshal_pack_list(Double(125.6)) == b"\x40\x5f\x66\x66\x66\x66\x66\x66"
 
-@test
-func test_unmarshal_double():
+test unmarshal_double():
     assert _unmarshal_unpack_list(
         "d",
         b"\x00\x00\x00\x00\x00\x00\x00\x00").to_double() == 0.0
@@ -655,40 +637,33 @@ func test_unmarshal_double():
         "d",
         b"\x40\x5f\x66\x66\x66\x66\x66\x66").to_double() == 125.6
 
-@test
-func test_marshal_string():
+test marshal_string():
     assert _marshal_pack_list(String("")) == b"\x00\x00\x00\x00\x00"
     assert _marshal_pack_list(String("foo")) == b"\x00\x00\x00\x03\x66\x6f\x6f\x00"
 
-@test
-func test_unmarshal_string():
+test unmarshal_string():
     assert _unmarshal_unpack_list("s", b"\x00\x00\x00\x00\x00").to_string() == ""
     assert _unmarshal_unpack_list(
         "s",
         b"\x00\x00\x00\x03\x66\x6f\x6f\x00").to_string() == "foo"
 
-@test
-func test_marshal_object_path():
+test marshal_object_path():
     assert _marshal_pack_list(ObjectPath("/Example")) == (
         b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00")
 
-@test
-func test_unmarshal_object_path():
+test unmarshal_object_path():
     assert _unmarshal_unpack_list(
         "o",
         b"\x00\x00\x00\x08\x2f\x45\x78\x61\x6d\x70\x6c\x65\x00"
     ).to_object_path() == "/Example"
 
-@test
-func test_marshal_signature():
+test marshal_signature():
     assert _marshal_pack_list(Signature("usi")) == b"\x03\x75\x73\x69\x00"
 
-@test
-func test_unmarshal_signature():
+test unmarshal_signature():
     assert _unmarshal_unpack_list("g", b"\x03\x75\x73\x69\x00").to_signature() == "usi"
 
-@test
-func test_marshal_array_int64():
+test marshal_array_int64():
     assert _marshal_pack_list(Array([Int64(5)])) == (
         b"\x00\x00\x00\x08"
         b"\x00\x00\x00\x00"
@@ -699,8 +674,7 @@ func test_marshal_array_int64():
         b"\x00\x00\x00\x00\x00\x00\x00\x05"
         b"\x00\x00\x00\x00\x00\x00\x00\x07")
 
-@test
-func test_unmarshal_array_int64():
+test unmarshal_array_int64():
     values = _unmarshal_unpack_list("ax",
                                     b"\x00\x00\x00\x08"
                                     b"\x00\x00\x00\x00"
@@ -717,15 +691,13 @@ func test_unmarshal_array_int64():
     assert values[0].to_int64() == 5
     assert values[1].to_int64() == 7
 
-@test
-func test_marshal_array_int32():
+test marshal_array_int32():
     assert _marshal_pack_list(Array([Int32(5), Int32(7)])) == (
         b"\x00\x00\x00\x08"
         b"\x00\x00\x00\x05"
         b"\x00\x00\x00\x07")
 
-@test
-func test_unmarshal_array_int32():
+test unmarshal_array_int32():
     values = _unmarshal_unpack_list("ai",
                                     b"\x00\x00\x00\x08"
                                     b"\x00\x00\x00\x05"
@@ -734,8 +706,7 @@ func test_unmarshal_array_int32():
     assert values[0].to_int32() == 5
     assert values[1].to_int32() == 7
 
-@test
-func test_marshal_struct_header():
+test marshal_struct_header():
     header = Struct([
         Byte(0x42),
         Byte(1),
@@ -748,8 +719,7 @@ func test_marshal_struct_header():
     assert _marshal_pack_list(header) == (
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
-@test
-func test_unmarshal_struct_header():
+test unmarshal_struct_header():
     values = unmarshal(
         "(yyyyuua(yv))",
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
@@ -765,8 +735,7 @@ func test_unmarshal_struct_header():
     assert values[5].to_uint32() == 3
     assert len(values[6].to_array()) == 0
 
-@test
-func test_marshal_header():
+test marshal_header():
     header: [Type] = [
         Byte(0x42),
         Byte(1),
@@ -779,8 +748,7 @@ func test_marshal_header():
     assert marshal(header) == (
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
 
-@test
-func test_unmarshal_header():
+test unmarshal_header():
     values = unmarshal(
         "yyyyuua(yv)",
         b"\x42\x01\x00\x01\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00")
@@ -794,21 +762,18 @@ func test_unmarshal_header():
     assert values[5].to_uint32() == 3
     assert len(values[6].to_array()) == 0
 
-@test
-func test_marshal_variant():
+test marshal_variant():
     assert _marshal_pack_list(Variant("i", Int32(5))) == (
         b"\x01\x69\x00\x00\x00\x00\x00\x05")
 
-@test
-func test_unmarshal_variant():
+test unmarshal_variant():
     signature, value = _unmarshal_unpack_list(
         "v",
         b"\x01\x69\x00\x00\x00\x00\x00\x05").to_variant()
     assert signature == "i"
     assert value.to_int32() == 5
 
-@test
-func test_marshal_dict():
+test marshal_dict():
     value = Dict({String("foo"): String("1"),
                   String("bar"): String("2")})
     marshalled = _marshal_pack_list(value)
@@ -824,8 +789,7 @@ func test_marshal_dict():
         b"\x00\x00\x00\x03\x66\x6f\x6f\x00\x00\x00\x00\x01\x31\x00")
     assert marshalled in [foo_before_bar, bar_before_foo]
 
-@test
-func test_unmarshal_dict():
+test unmarshal_dict():
     items = _unmarshal_unpack_list(
         "{ss}",
         b"\x00\x00\x00\x1e"
@@ -841,8 +805,7 @@ func test_unmarshal_dict():
         else:
             raise AssertionError()
 
-@test
-func test_marshal_name_acquire():
+test marshal_name_acquire():
     # Header.
     marshalled = marshal([
         Byte(0x4b),
@@ -892,8 +855,7 @@ func test_marshal_name_acquire():
     marshalled = marshal([String(":1.572")])
     assert marshalled == b"\x00\x00\x00\x06:1.572\x00"
 
-@test
-func test_unmarshal_name_acquire():
+test unmarshal_name_acquire():
     # Header.
     values = unmarshal("yyyyuua(yv)",
                        b"\x4b\x04\x01\x01" b"\x00\x00\x00\x0b" b"\x00\x00\x00\x02"
@@ -969,8 +931,7 @@ func test_unmarshal_name_acquire():
     assert len(values) == 1
     assert values[0].to_string() == ":1.572"
 
-@test
-func test_unmarshal_out_of_signature_characters():
+test unmarshal_out_of_signature_characters():
     try:
         unmarshal("a", b"\x00\x00\x00\x00")
         message = ""
@@ -979,8 +940,7 @@ func test_unmarshal_out_of_signature_characters():
 
     assert message == "Out of signature characters."
 
-@test
-func test_unmarshal_out_of_data():
+test unmarshal_out_of_data():
     try:
         unmarshal("i", b"\x00\x00\x00")
         message = ""
