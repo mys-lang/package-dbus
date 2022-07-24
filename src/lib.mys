@@ -36,19 +36,19 @@ trait Bus:
 
 class _Completion:
     fiber: Fiber
-    message: _Message
+    message: _Message?
 
 class _Message:
     big_endian: bool
     type: MessageType
     serial: u32
     body: bytes
-    path: string
-    destination: string
-    interface: string
-    member: string
-    signature: string
-    error_name: string
+    path: string?
+    destination: string?
+    interface: string?
+    member: string?
+    signature: string?
+    error_name: string?
 
     func __init__(self,
                  big_endian: bool,
@@ -66,10 +66,10 @@ class _Message:
         self.signature = None
 
 class _MessageReader(Fiber):
-    _completions: {u32: _Completion}
+    _completions: {u32: _Completion?}
 
     func __init__(self, completions: {u32: _Completion}):
-        self._completions = completions
+        self._completions = {k: v for k, v in completions}
 
     func run(self):
         while True:
@@ -170,7 +170,7 @@ func _build_header(serial: u32,
 class SessionBus(Bus):
     _serial: u32
     _completions: {u32: _Completion}
-    _message_reader: _MessageReader
+    _message_reader: _MessageReader?
 
     func __init__(self):
         self._serial = 0
